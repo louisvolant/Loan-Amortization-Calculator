@@ -55,7 +55,6 @@ export const translations: Translations = {
       interest: "Intereses (€)",
       additionalCosts: "Costos Adicionales (€)",
       remainingBalance: "Saldo Pendiente (€)",
-      insuranceRate: "Ingresar tasa de seguro anual",
     },
     placeholders: {
       rank: "Número",
@@ -68,6 +67,7 @@ export const translations: Translations = {
       loanAmount: "Ingresar monto del préstamo",
       interestRate: "Ingresar tasa de interés",
       loanTerm: "Ingresar plazo del préstamo",
+      insuranceRate: "Ingresar tasa de seguro anual",
     },
   },
   fr: {

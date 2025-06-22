@@ -32,6 +32,7 @@ export interface Translations {
     addRowButton: string;
     calculateButton: string;
     amortizationScheduleTitle: string;
+    downloadButton: string;
     insuranceRateLabel: string;
     tableHeaders: {
       rank: string;
