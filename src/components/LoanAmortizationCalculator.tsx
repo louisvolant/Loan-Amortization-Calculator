@@ -9,6 +9,7 @@ export default function LoanAmortizationCalculator() {
   const [loanAmount, setLoanAmount] = useState("");
   const [interestRate, setInterestRate] = useState("");
   const [loanTermMonths, setLoanTermMonths] = useState("");
+  const [insuranceRate, setInsuranceRate] = useState("");
   const [tableRows, setTableRows] = useState<TableRowInput[]>([
     {
       rank: "",
@@ -24,57 +25,47 @@ export default function LoanAmortizationCalculator() {
   const [error, setError] = useState("");
   const [language, setLanguage] = useState<Language>("en");
 
-  useEffect(() => {
-    try {
-      const savedState = localStorage.getItem("mortgageCalculatorState");
-      if (savedState) {
-        const parsedState = JSON.parse(savedState);
-        console.log("Loaded from localStorage:", parsedState);
-        setLoanAmount(parsedState.loanAmount || "");
-        setInterestRate(parsedState.interestRate || "");
-        // Load as loanTermMonths
-        setLoanTermMonths(parsedState.loanTermMonths || "");
-        setTableRows(
-          parsedState.tableRows || [
-            {
-              rank: "",
-              dueDate: "",
-              payment: "",
-              principal: "",
-              interest: "",
-              additionalCosts: "",
-              remainingBalance: "",
-            },
-          ]
-        );
-        setAmortizationSchedule(parsedState.amortizationSchedule || []);
-        setLanguage(parsedState.language || "en");
-      }
-    } catch (error) {
-      console.error("Error loading from localStorage:", error);
-    }
-  }, []);
+   useEffect(() => {
+     try {
+       const savedState = localStorage.getItem("mortgageCalculatorState");
+       if (savedState) {
+         const parsedState = JSON.parse(savedState);
+         setLoanAmount(parsedState.loanAmount || "");
+         setInterestRate(parsedState.interestRate || "");
+         setLoanTermMonths(parsedState.loanTermMonths || "");
+         setInsuranceRate(parsedState.insuranceRate || ""); // Load insurance rate
+         setTableRows(
+           parsedState.tableRows || [
+             // ...
+           ]
+         );
+         setAmortizationSchedule(parsedState.amortizationSchedule || []);
+         setLanguage(parsedState.language || "en");
+       }
+     } catch (error) {
+       console.error("Error loading from localStorage:", error);
+     }
+   }, []);
 
-  // Save state to local storage
-  useEffect(() => {
-    try {
-      const stateToSave = {
-        loanAmount,
-        interestRate,
-        loanTermMonths, // Save as loanTermMonths
-        tableRows,
-        amortizationSchedule,
-        language,
-      };
-      console.log("Saving to localStorage:", stateToSave);
-      localStorage.setItem("mortgageCalculatorState", JSON.stringify(stateToSave));
-    } catch (error) {
-      console.error("Error saving to localStorage:", error);
-    }
-  }, [loanAmount, interestRate, loanTermMonths, tableRows, amortizationSchedule, language]); // Dependency updated
+   useEffect(() => {
+     try {
+       const stateToSave = {
+         loanAmount,
+         interestRate,
+         loanTermMonths,
+         insuranceRate, // Save insurance rate
+         tableRows,
+         amortizationSchedule,
+         language,
+       };
+       localStorage.setItem("mortgageCalculatorState", JSON.stringify(stateToSave));
+     } catch (error) {
+       console.error("Error saving to localStorage:", error);
+     }
+   }, [loanAmount, interestRate, loanTermMonths, insuranceRate, tableRows, amortizationSchedule, language]);
 
   const addTableRow = () => {
-    if (tableRows.length < 3) {
+    if (tableRows.length < 5) {
       setTableRows([
         ...tableRows,
         {
@@ -98,16 +89,18 @@ export default function LoanAmortizationCalculator() {
 
 const calculateAmortization = () => {
   setError("");
-  const initialLoanAmount = parseFloat(loanAmount); // Use a new variable for the initial amount
-  const annualRate = parseFloat(interestRate);
-  const totalLoanTermMonths = parseInt(loanTermMonths); // Renamed from loanTerm to loanTermMonths
+  const initialLoanAmount = parseFloat(loanAmount);
+  const annualInterestRate = parseFloat(interestRate);
+  const totalLoanTermMonths = parseInt(loanTermMonths);
+  const annualInsuranceRate = parseFloat(insuranceRate); // Get the insurance rate
 
-  const monthlyRate = annualRate / 100 / 12;
+  const monthlyInterestRate = annualInterestRate / 100 / 12;
+  const monthlyInsuranceRate = annualInsuranceRate / 100 / 12; // Monthly insurance rate
 
-  // Validate initial inputs
-  if (!initialLoanAmount || isNaN(initialLoanAmount) || initialLoanAmount <= 0 ||
-      !annualRate || isNaN(annualRate) || annualRate <= 0 ||
-      !totalLoanTermMonths || isNaN(totalLoanTermMonths) || totalLoanTermMonths <= 0) {
+  // Basic input validation
+  if (isNaN(initialLoanAmount) || initialLoanAmount <= 0 ||
+      isNaN(annualInterestRate) || annualInterestRate <= 0 ||
+      isNaN(totalLoanTermMonths) || totalLoanTermMonths <= 0) {
     setError(
       language === "en"
         ? "Please provide valid loan amount, annual interest rate, and loan term (in months)."
@@ -118,27 +111,25 @@ const calculateAmortization = () => {
     return;
   }
 
-  // Calculate the monthly payment for the *original* loan
-  const originalMonthlyPayment = initialLoanAmount * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -totalLoanTermMonths)));
-
-  if (!isFinite(originalMonthlyPayment) || originalMonthlyPayment <= 0) {
-    setError(
-      language === "en"
-        ? "Invalid calculation for original monthly payment. Please check your inputs."
-        : language === "es"
-        ? "Cálculo inválido para el pago mensual original. Por favor, revise sus entradas."
-        : "Calcul invalide pour le paiement mensuel initial. Veuillez vérifier vos entrées."
-    );
-    return;
-  }
+  // Pre-calculate what the "fixed principal portion" would be if it were a linear amortization.
+  // This is a common pattern in French loans where the principal repayment increases slightly
+  // to keep the total payment relatively stable or decreasing.
+  // However, given your PDF shows decreasing total payment, let's assume
+  // a fixed or increasing principal part that leads to a decreasing total payment.
+  // A simpler model is to assume the *calculated* Principal portion will lead to a specific remaining balance.
+  // We'll iterate and calculate month by month.
 
   const fullSchedule: AmortizationRow[] = [];
   let currentBalance = initialLoanAmount;
-  let lastCalculatedRank = 0;
-  let currentMonthlyPayment = originalMonthlyPayment; // This will change if a lump sum impacts it
-  let currentAdditionalCosts = 0; // To carry forward additional costs
+  let currentEffectiveTermRemaining = totalLoanTermMonths; // This will adjust if payments are skipped/extra
+  let lastProvidedRank = 0;
+  let lastProvidedDueDate: Date | null = null;
+  let lastProvidedPayment: number | null = null; // To carry forward if applicable
+  let lastProvidedPrincipal: number | null = null;
+  let lastProvidedInterest: number | null = null;
+  let lastProvidedAdditionalCosts: number | null = null; // To carry forward the *last known* additional cost
 
-  // Process optional amortization table rows
+  // Process and sort optional amortization table rows
   const filledTableRows = tableRows.filter(
     (row) =>
       row.rank &&
@@ -150,20 +141,36 @@ const calculateAmortization = () => {
       row.remainingBalance &&
       !isNaN(parseFloat(row.remainingBalance)) &&
       !isNaN(parseInt(row.rank))
-  ).sort((a, b) => parseInt(a.rank) - parseInt(b.rank)); // Ensure sorted by rank
+  ).sort((a, b) => parseInt(a.rank) - parseInt(b.rank));
 
-  // Keep track of the last provided row's actual values to resume calculation
-  let overrideRemainingBalance: number | null = null;
-  let overrideRank: number | null = null;
-  let overrideDueDate: Date | null = null;
-  let overrideAdditionalCosts: number | null = null;
+  // Determine initial payment based on the first period of the original loan
+  // This assumes a standard annuity loan for the principal and interest part
+  // if no optional rows are provided. If optional rows are provided, they override.
+  let currentMonthlyPayment = initialLoanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -totalLoanTermMonths)));
+  if (!isFinite(currentMonthlyPayment)) {
+    // Handle cases where monthlyInterestRate is 0 or totalLoanTermMonths is problematic
+    // For example, if monthlyInterestRate is 0, then principal payment should be loanAmount / totalLoanTermMonths
+    if (monthlyInterestRate === 0 && totalLoanTermMonths > 0) {
+        currentMonthlyPayment = initialLoanAmount / totalLoanTermMonths;
+    } else {
+        // Fallback or error for other problematic cases
+        setError("Error: Cannot calculate initial monthly payment. Check interest rate and loan term.");
+        return;
+    }
+  }
 
 
-  // Populate the schedule up to the total loan term
+  // To handle the decreasing 'Accessoires', we'll use a dynamic `currentAdditionalCosts`
+  // Initialize currentAdditionalCosts based on the initial loan amount
+  let currentAdditionalCosts = initialLoanAmount * monthlyInsuranceRate; // Calculate initial insurance based on full loan amount
+
+  // Iterate through each possible rank up to the total loan term
   for (let i = 1; i <= totalLoanTermMonths; i++) {
-    const dueDate = new Date();
-    dueDate.setDate(1); // Start from the first of the current month
-    dueDate.setMonth(dueDate.getMonth() + i - 1); // Adjust month for rank
+    const defaultDueDate = new Date();
+    defaultDueDate.setDate(5); // Assuming payments are due on the 5th based on your PDF
+    defaultDueDate.setMonth(defaultDueDate.getMonth() + i - 1);
+
+    let rankToPush: AmortizationRow;
 
     // Check if this rank is present in the provided table rows
     const providedRow = filledTableRows.find(row => parseInt(row.rank) === i);
@@ -176,7 +183,7 @@ const calculateAmortization = () => {
       const providedInterest = parseFloat(providedRow.interest);
       const providedAdditionalCosts = parseFloat(providedRow.additionalCosts);
 
-      fullSchedule.push({
+      rankToPush = {
         rank: i,
         dueDate: providedRow.dueDate,
         payment: providedPayment,
@@ -184,66 +191,102 @@ const calculateAmortization = () => {
         interest: providedInterest,
         additionalCosts: providedAdditionalCosts,
         remainingBalance: providedBalance,
-      });
+      };
 
-      // Update currentBalance for the next calculation
+      // Update current state for next calculations
       currentBalance = providedBalance;
-      lastCalculatedRank = i;
-      overrideRemainingBalance = providedBalance;
-      overrideRank = i;
-      overrideDueDate = new Date(providedRow.dueDate);
-      currentAdditionalCosts = providedAdditionalCosts; // Carry forward the provided additional costs
+      lastProvidedRank = i;
+      lastProvidedDueDate = new Date(providedRow.dueDate);
+      lastProvidedPayment = providedPayment;
+      lastProvidedPrincipal = providedPrincipal;
+      lastProvidedInterest = providedInterest;
+      lastProvidedAdditionalCosts = providedAdditionalCosts; // Carry forward provided additional costs
 
-      // If this is the last provided row and there's remaining balance, recalculate monthly payment for subsequent periods
-      if (currentBalance > 0 && i === filledTableRows[filledTableRows.length - 1].rank) {
-          const remainingTermForRecalculation = totalLoanTermMonths - overrideRank;
-          if (remainingTermForRecalculation > 0) {
-              const denominator = (1 - Math.pow(1 + monthlyRate, -remainingTermForRecalculation));
-              if (denominator === 0) {
-                setError(
-                  language === "en"
-                    ? "Cannot calculate monthly payment with given terms for remaining loan. Please check interest rate and term."
-                    : language === "es"
-                    ? "No se puede calcular el pago mensual con los términos dados para el préstamo restante. Verifique la tasa de interés y el plazo."
-                    : "Impossible de calculer le paiement mensuel avec les termes donnés pour le prêt restant. Veuillez vérifier le taux d'intérêt et la durée."
-                );
-                return;
-              }
-              currentMonthlyPayment = currentBalance * (monthlyRate / denominator);
-          } else {
-            currentMonthlyPayment = 0; // Loan paid off
-          }
+      // If this provided row clears the loan, stop.
+      if (currentBalance <= 0) {
+        fullSchedule.push(rankToPush);
+        break;
       }
 
-    } else if (i > lastCalculatedRank && currentBalance > 0) {
-      // For ranks after the last provided row, or if no rows were provided at all
-      const interestPayment = currentBalance * monthlyRate;
-      let principalPayment = currentMonthlyPayment - interestPayment - currentAdditionalCosts; // Deduct additional costs
+      // If we just processed a provided row, we need to potentially recalculate
+      // the base principal/interest payment for the *remaining* loan duration
+      // if the remaining balance dramatically changed due to a lump sum.
+      // This is the tricky part: how does the bank re-amortize after a lump sum?
+      // Common scenarios:
+      // 1. Keep original payment, reduce term (requires re-calculating remaining term)
+      // 2. Keep original term, reduce payment (requires re-calculating new payment)
+      // Your PDF implies a fixed interest rate with changing principal/interest parts.
+      // Let's assume that after an override, the *remaining balance* is simply
+      // re-amortized over the *remaining original term* with a *recalculated fixed monthly principal+interest payment*.
+      // The additional costs will continue to be calculated based on the new currentBalance.
+      const remainingPaymentsCount = totalLoanTermMonths - lastProvidedRank;
+      if (remainingPaymentsCount > 0 && currentBalance > 0) {
+          const denominator = (1 - Math.pow(1 + monthlyInterestRate, -remainingPaymentsCount));
+          if (denominator === 0) { // Handle division by zero for monthlyInterestRate = 0
+            currentMonthlyPayment = currentBalance / remainingPaymentsCount;
+          } else {
+            currentMonthlyPayment = currentBalance * (monthlyInterestRate / denominator);
+          }
+      } else if (currentBalance <= 0) {
+          currentMonthlyPayment = 0; // Loan fully paid
+      }
 
-      // Handle the last payment to ensure balance becomes zero
+    } else {
+      // This is a calculated row
+      if (currentBalance <= 0) {
+        break; // Loan is fully paid off
+      }
+
+      const interestPayment = currentBalance * monthlyInterestRate;
+
+      // Calculate additional costs based on the current remaining balance
+      // If no insurance rate is provided, or if the optional row specified 0, it stays 0.
+      let calculatedAdditionalCosts = isNaN(monthlyInsuranceRate) ? 0 : currentBalance * monthlyInsuranceRate;
+      // If a last provided additional cost exists, use it if it seems consistent,
+      // otherwise rely on calculated. For simplicity, let's assume it's recalculated
+      // based on the currentBalance or fixed after an optional row sets it.
+      // For now, let's use the currentBalance * monthlyInsuranceRate as the standard.
+      // You can refine this if insurance has a truly fixed component or a different calculation.
+
+      // Determine the principal + interest portion of the payment for this period.
+      // This is the most ambiguous part given your loan's "decreasing payment" characteristic.
+      // If the loan has a fixed "amortized principal" portion, that's what's needed.
+      // If it's an annuity loan whose payments are recalculated on remaining term:
+      // We'll use the `currentMonthlyPayment` which was either the `originalLoanPrincipalInterestPayment`
+      // or the recalculated one after an optional row.
+      let principalInterestPayment = currentMonthlyPayment; // The base payment for P+I
+
+      let principalPayment = principalInterestPayment - interestPayment;
+
+      // Ensure principal payment does not over-amortize the loan
       if (principalPayment > currentBalance) {
         principalPayment = currentBalance;
       }
 
-      currentBalance = currentBalance - principalPayment;
+      // Update balance
+      currentBalance -= principalPayment;
 
-      const nextDueDate = new Date(overrideDueDate || dueDate); // Use overrideDueDate if available, otherwise default
-      nextDueDate.setMonth(nextDueDate.getMonth() + (i - (overrideRank || 0))); // Adjust month for rank relative to override
+      // Calculate total payment for this row
+      const totalPayment = principalPayment + interestPayment + calculatedAdditionalCosts;
 
-      fullSchedule.push({
+      const effectiveDueDate = new Date(lastProvidedDueDate || defaultDueDate);
+      effectiveDueDate.setMonth(effectiveDueDate.getMonth() + (i - lastProvidedRank)); // Adjust month correctly
+
+      rankToPush = {
         rank: i,
-        dueDate: nextDueDate.toISOString().split("T")[0],
-        payment: parseFloat(currentMonthlyPayment.toFixed(2)),
+        dueDate: effectiveDueDate.toISOString().split("T")[0],
+        payment: parseFloat(totalPayment.toFixed(2)),
         principal: parseFloat(principalPayment.toFixed(2)),
         interest: parseFloat(interestPayment.toFixed(2)),
-        additionalCosts: parseFloat(currentAdditionalCosts.toFixed(2)), // Carry forward
+        additionalCosts: parseFloat(calculatedAdditionalCosts.toFixed(2)),
         remainingBalance: parseFloat(Math.max(currentBalance, 0).toFixed(2)),
-      });
+      };
+    }
 
-      lastCalculatedRank = i;
+    fullSchedule.push(rankToPush);
 
-    } else if (currentBalance <= 0) {
-      // If balance is already zero, stop adding rows
+    // If current balance reaches 0 or less, stop
+    if (currentBalance <= 0 && providedRow === undefined) { // Stop if paid off *by calculation*, not necessarily by provided row
       break;
     }
   }
@@ -290,7 +333,8 @@ const calculateAmortization = () => {
 "${t.loanAmountLabel}",${loanAmount}
 "${t.interestRateLabel}",${interestRate}
 "${t.loanTermLabel}",${loanTermMonths}
-`;
+"${t.insuranceRateLabel}",${insuranceRate}
+`; // Added insuranceRate to CSV export
 
     const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(inputsData + "\n" + headers + "\n" + rows.join("\n"));
     const link = document.createElement("a");
@@ -357,6 +401,19 @@ const calculateAmortization = () => {
             placeholder={t.placeholders.loanTerm}
           />
         </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t.insuranceRateLabel} {/* New translation key */}
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={insuranceRate}
+                    onChange={(e) => setInsuranceRate(e.target.value)}
+                    className="mt-1 w-full p-3 text-base border rounded-md bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 min-w-[100px]"
+                    placeholder={t.placeholders.insuranceRate} {/* New translation key */}
+                  />
+                </div>
       </div>
 
       {/* Optional Amortization Table Rows */}
@@ -474,11 +531,11 @@ const calculateAmortization = () => {
             </tbody>
           </table>
           <button
-                      onClick={handleDownload}
-                      className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                    >
-                      {t.downloadButton}
-                    </button>
+          onClick={handleDownload}
+          className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+        >
+          {t.downloadButton}
+        </button>
         </div>
       )}
     </div>

@@ -32,6 +32,7 @@ export interface Translations {
     addRowButton: string;
     calculateButton: string;
     amortizationScheduleTitle: string;
+    insuranceRateLabel: string;
     tableHeaders: {
       rank: string;
       dueDate: string;
@@ -52,6 +53,7 @@ export interface Translations {
       loanAmount: string;
       interestRate: string;
       loanTerm: string;
+      insuranceRate: string;
     };
   };
 }

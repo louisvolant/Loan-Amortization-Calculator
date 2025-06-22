@@ -12,6 +12,7 @@ export const translations: Translations = {
     calculateButton: "Calculate Amortization Schedule",
     amortizationScheduleTitle: "Amortization Schedule",
     downloadButton: "Download Schedule (CSV)",
+    insuranceRateLabel: "Annual Insurance Rate (%)",
     tableHeaders: {
       rank: "Rank",
       dueDate: "Due Date",
@@ -32,6 +33,7 @@ export const translations: Translations = {
       loanAmount: "Enter loan amount",
       interestRate: "Enter interest rate",
       loanTerm: "Enter loan term",
+      insuranceRate: "Enter annual insurance rate",
     },
   },
   es: {
@@ -44,6 +46,7 @@ export const translations: Translations = {
     calculateButton: "Calcular la Tabla de Amortización",
     amortizationScheduleTitle: "Tabla de Amortización",
     downloadButton: "Descargar Tabla (CSV)",
+    insuranceRateLabel: "Tasa de Seguro Anual (%)",
     tableHeaders: {
       rank: "Número",
       dueDate: "Fecha de Vencimiento",
@@ -52,6 +55,7 @@ export const translations: Translations = {
       interest: "Intereses (€)",
       additionalCosts: "Costos Adicionales (€)",
       remainingBalance: "Saldo Pendiente (€)",
+      insuranceRate: "Ingresar tasa de seguro anual",
     },
     placeholders: {
       rank: "Número",
@@ -76,6 +80,7 @@ export const translations: Translations = {
     calculateButton: "Calculer le tableau d'amortissement",
     amortizationScheduleTitle: "Tableau d'amortissement",
     downloadButton: "Télécharger le tableau (CSV)",
+    insuranceRateLabel: "Taux d'assurance annuel (%)",
     tableHeaders: {
       rank: "Rang",
       dueDate: "Date de l'échéance",
@@ -96,6 +101,7 @@ export const translations: Translations = {
       loanAmount: "Saisir le montant du prêt",
       interestRate: "Saisir le taux d'intérêt",
       loanTerm: "Saisir la durée du prêt",
+      insuranceRate: "Saisir le taux d'assurance annuel",
     },
   },
 };
