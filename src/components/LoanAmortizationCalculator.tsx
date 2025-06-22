@@ -413,70 +413,91 @@ export default function LoanAmortizationCalculator() {
       </div>
 
       {/* Optional Amortization Table Rows */}
-      <div className="mb-6">
-        <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">{t.optionalRowsTitle}</h3>
-        {tableRows.map((row, index) => (
-          <div key={index} className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-7">
-            <input
-              type="number"
-              value={row.rank}
-              onChange={(e) => updateTableRow(index, "rank", e.target.value)}
-              placeholder={t.placeholders.rank}
-              className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
-            />
-            <input
-              type="date"
-              value={row.dueDate}
-              onChange={(e) => updateTableRow(index, "dueDate", e.target.value)}
-              placeholder={t.placeholders.dueDate}
-              className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 min-w-[150px]"
-            />
-            <input
-              type="number"
-              value={row.payment}
-              onChange={(e) => updateTableRow(index, "payment", e.target.value)}
-              placeholder={t.placeholders.payment}
-              className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
-            />
-            <input
-              type="number"
-              value={row.principal}
-              onChange={(e) => updateTableRow(index, "principal", e.target.value)}
-              placeholder={t.placeholders.principal}
-              className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
-            />
-            <input
-              type="number"
-              value={row.interest}
-              onChange={(e) => updateTableRow(index, "interest", e.target.value)}
-              placeholder={t.placeholders.interest}
-              className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
-            />
-            <input
-              type="number"
-              value={row.additionalCosts}
-              onChange={(e) => updateTableRow(index, "additionalCosts", e.target.value)}
-              placeholder={t.placeholders.additionalCosts}
-              className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
-            />
-            <input
-              type="number"
-              value={row.remainingBalance}
-              onChange={(e) => updateTableRow(index, "remainingBalance", e.target.value)}
-              placeholder={t.placeholders.remainingBalance}
-              className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
-            />
-          </div>
-        ))}
-        {tableRows.length < 3 && (
-          <button
-            onClick={addTableRow}
-            className="mt-2 rounded-md bg-purple-500 px-4 py-2 text-white hover:bg-purple-600"
-          >
-            {t.addRowButton}
-          </button>
-        )}
-      </div>
+        <div className="mb-6">
+          <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">{t.optionalRowsTitle}</h3>
+          {tableRows.map((row, index) => (
+            <div key={index} className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              <div className="flex flex-col min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.rank}</label>
+                <input
+                  type="number"
+                  value={row.rank}
+                  onChange={(e) => updateTableRow(index, "rank", e.target.value)}
+                  placeholder={t.placeholders.rank}
+                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                />
+              </div>
+              <div className="flex flex-col min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.dueDate}</label>
+                <input
+                  type="date"
+                  value={row.dueDate}
+                  onChange={(e) => updateTableRow(index, "dueDate", e.target.value)}
+                  placeholder={t.placeholders.dueDate}
+                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                />
+              </div>
+              <div className="flex flex-col min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.payment}</label>
+                <input
+                  type="number"
+                  value={row.payment}
+                  onChange={(e) => updateTableRow(index, "payment", e.target.value)}
+                  placeholder={t.placeholders.payment}
+                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                />
+              </div>
+              <div className="flex flex-col min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.principal}</label>
+                <input
+                  type="number"
+                  value={row.principal}
+                  onChange={(e) => updateTableRow(index, "principal", e.target.value)}
+                  placeholder={t.placeholders.principal}
+                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                />
+              </div>
+              <div className="flex flex-col min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.interest}</label>
+                <input
+                  type="number"
+                  value={row.interest}
+                  onChange={(e) => updateTableRow(index, "interest", e.target.value)}
+                  placeholder={t.placeholders.interest}
+                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                />
+              </div>
+              <div className="flex flex-col min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.additionalCosts}</label>
+                <input
+                  type="number"
+                  value={row.additionalCosts}
+                  onChange={(e) => updateTableRow(index, "additionalCosts", e.target.value)}
+                  placeholder={t.placeholders.additionalCosts}
+                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                />
+              </div>
+              <div className="flex flex-col min-w-[150px]">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.remainingBalance}</label>
+                <input
+                  type="number"
+                  value={row.remainingBalance}
+                  onChange={(e) => updateTableRow(index, "remainingBalance", e.target.value)}
+                  placeholder={t.placeholders.remainingBalance}
+                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                />
+              </div>
+            </div>
+          ))}
+          {tableRows.length < 3 && (
+            <button
+              onClick={addTableRow}
+              className="mt-2 rounded-md bg-purple-500 px-4 py-2 text-white hover:bg-purple-600"
+            >
+              {t.addRowButton}
+            </button>
+          )}
+        </div>
 
       {/* Calculate Button */}
       <button
