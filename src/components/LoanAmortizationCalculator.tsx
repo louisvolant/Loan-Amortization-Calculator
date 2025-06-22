@@ -24,11 +24,12 @@ export default function LoanAmortizationCalculator() {
   const [error, setError] = useState("");
   const [language, setLanguage] = useState<Language>("en");
 
-  // Load state from local storage on mount
-  useEffect(() => {
+useEffect(() => {
+  try {
     const savedState = localStorage.getItem("mortgageCalculatorState");
     if (savedState) {
       const parsedState = JSON.parse(savedState);
+      console.log("Loaded from localStorage:", parsedState); // Debug log
       setLoanAmount(parsedState.loanAmount || "");
       setInterestRate(parsedState.interestRate || "");
       setLoanTerm(parsedState.loanTerm || "");
@@ -48,10 +49,14 @@ export default function LoanAmortizationCalculator() {
       setAmortizationSchedule(parsedState.amortizationSchedule || []);
       setLanguage(parsedState.language || "en");
     }
-  }, []);
+  } catch (error) {
+    console.error("Error loading from localStorage:", error);
+  }
+}, []);
 
-  // Save state to local storage when inputs, schedule, or language change
-  useEffect(() => {
+// Save state to local storage when inputs, schedule, or language change
+useEffect(() => {
+  try {
     const stateToSave = {
       loanAmount,
       interestRate,
@@ -60,8 +65,12 @@ export default function LoanAmortizationCalculator() {
       amortizationSchedule,
       language,
     };
+    console.log("Saving to localStorage:", stateToSave); // Debug log
     localStorage.setItem("mortgageCalculatorState", JSON.stringify(stateToSave));
-  }, [loanAmount, interestRate, loanTerm, tableRows, amortizationSchedule, language]);
+  } catch (error) {
+    console.error("Error saving to localStorage:", error);
+  }
+}, [loanAmount, interestRate, loanTerm, tableRows, amortizationSchedule, language]);
 
   const addTableRow = () => {
     if (tableRows.length < 3) {
@@ -86,107 +95,119 @@ export default function LoanAmortizationCalculator() {
     setTableRows(newRows);
   };
 
-  const calculateAmortization = () => {
-    setError("");
-    let amount = parseFloat(loanAmount);
-    const rate = parseFloat(interestRate) / 100 / 12; // Monthly interest rate
-    const term = parseInt(loanTerm) * 12; // Total months
+const calculateAmortization = () => {
+  setError("");
+  let amount = parseFloat(loanAmount);
+  const rate = parseFloat(interestRate) / 100 / 12; // Monthly interest rate
+  let term = parseInt(loanTerm) * 12; // Total months
+  let startRank = 1; // Starting rank for the schedule
+  let startDate = new Date();
+  startDate.setDate(1); // Start from the first of the current month
 
-    // Validate basic inputs
-    if (!amount || !rate || !term || amount <= 0 || rate <= 0 || term <= 0) {
+  // Validate basic inputs
+  if (!rate || !term || rate <= 0 || term <= 0) {
+    setError(
+      language === "en"
+        ? "Please provide valid interest rate and term."
+        : language === "es"
+        ? "Por favor, proporcione una tasa de interés y plazo válidos."
+        : "Veuillez fournir un taux d'intérêt et une durée valides."
+    );
+    return;
+  }
+
+  // Check for valid table rows to infer loan state
+  const validRows = tableRows.filter(
+    (row) =>
+      row.rank &&
+      row.dueDate &&
+      row.payment &&
+      row.principal &&
+      row.interest &&
+      row.additionalCosts &&
+      row.remainingBalance &&
+      !isNaN(parseFloat(row.remainingBalance)) &&
+      !isNaN(parseInt(row.rank))
+  );
+
+  if (validRows.length > 0) {
+    // Use the row with the highest rank to set the starting point
+    const latestRow = validRows.reduce((latest, row) => {
+      const rank = parseInt(row.rank);
+      return rank > (latest.rank ? parseInt(latest.rank) : 0) ? row : latest;
+    }, validRows[0]);
+
+    const remainingBalance = parseFloat(latestRow.remainingBalance);
+    const rank = parseInt(latestRow.rank);
+    const dueDate = new Date(latestRow.dueDate);
+
+    if (!isNaN(remainingBalance) && !isNaN(rank) && dueDate instanceof Date && !isNaN(dueDate.getTime())) {
+      amount = remainingBalance; // Use remaining balance as the starting loan amount
+      startRank = rank + 1; // Start schedule from the next rank
+      startDate = new Date(dueDate);
+      startDate.setMonth(dueDate.getMonth() + 1); // Start from the next month
+      term = term - rank; // Adjust remaining term
+    } else {
       setError(
         language === "en"
-          ? "Please provide valid loan amount, interest rate, and term."
+          ? "Invalid table row data. Please check your inputs."
           : language === "es"
-          ? "Por favor, proporcione un monto de préstamo, tasa de interés y plazo válidos."
-          : "Veuillez fournir un montant de prêt, un taux d'intérêt et une durée valides."
+          ? "Datos de fila de tabla inválidos. Por favor, revise sus entradas."
+          : "Données de ligne de tableau invalides. Veuillez vérifier vos entrées."
       );
       return;
     }
+  } else if (!amount || amount <= 0) {
+    // If no valid table rows, require a valid loan amount
+    setError(
+      language === "en"
+        ? "Please provide a valid loan amount or table row data."
+        : language === "es"
+        ? "Por favor, proporcione un monto de préstamo válido o datos de fila de tabla."
+        : "Veuillez fournir un montant de prêt valide ou des données de ligne de tableau."
+    );
+    return;
+  }
 
-    // If table rows are provided, try to infer parameters
-    if (
-      tableRows.some(
-        (row) =>
-          row.rank ||
-          row.dueDate ||
-          row.payment ||
-          row.principal ||
-          row.interest ||
-          row.additionalCosts ||
-          row.remainingBalance
-      )
-    ) {
-      const validRows = tableRows.filter(
-        (row) =>
-          row.rank &&
-          row.payment &&
-          row.principal &&
-          row.interest &&
-          row.additionalCosts &&
-          row.remainingBalance
-      );
-      if (validRows.length > 0) {
-        // Use the first valid row to infer parameters
-        const firstRow = validRows[0];
-        const payment = parseFloat(firstRow.payment);
-        const interest = parseFloat(firstRow.interest);
-        const principal = parseFloat(firstRow.principal);
-        const remainingBalance = parseFloat(firstRow.remainingBalance);
-        const rank = parseInt(firstRow.rank);
+  // Calculate monthly payment based on current balance and remaining term
+  const monthlyPayment = amount * (rate / (1 - Math.pow(1 + rate, -term)));
+  if (!isFinite(monthlyPayment) || monthlyPayment <= 0) {
+    setError(
+      language === "en"
+        ? "Invalid calculation. Please check your inputs."
+        : language === "es"
+        ? "Cálculo inválido. Por favor, revise sus entradas."
+        : "Calcul invalide. Veuillez vérifier vos entrées."
+    );
+    return;
+  }
 
-        // Infer loan amount if rank > 1
-        if (rank > 1) {
-          // Back-calculate initial loan amount (simplified)
-          amount = remainingBalance + principal;
-          for (let i = 1; i < rank; i++) {
-            amount = amount / (1 + rate) + principal;
-          }
-        }
-      }
-    }
+  // Generate amortization schedule
+  const schedule: AmortizationRow[] = [];
+  let balance = amount;
 
-    // Calculate monthly payment
-    const monthlyPayment = amount * (rate / (1 - Math.pow(1 + rate, -term)));
-    if (!isFinite(monthlyPayment) || monthlyPayment <= 0) {
-      setError(
-        language === "en"
-          ? "Invalid calculation. Please check your inputs."
-          : language === "es"
-          ? "Cálculo inválido. Por favor, revise sus entradas."
-          : "Calcul invalide. Veuillez vérifier vos entrées."
-      );
-      return;
-    }
+  for (let i = 0; i < term && balance > 0; i++) {
+    const interestPayment = balance * rate;
+    const principalPayment = monthlyPayment - interestPayment;
+    balance = balance - principalPayment;
 
-    // Generate amortization schedule
-    const schedule: AmortizationRow[] = [];
-    let balance = amount;
-    const startDate = new Date();
-    startDate.setDate(1); // Start from the first of the current month
+    // Calculate due date
+    const dueDate = new Date(startDate);
+    dueDate.setMonth(startDate.getMonth() + i);
 
-    for (let i = 1; i <= term && balance > 0; i++) {
-      const interestPayment = balance * rate;
-      const principalPayment = monthlyPayment - interestPayment;
-      balance = balance - principalPayment;
+    schedule.push({
+      rank: startRank + i,
+      dueDate: dueDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
+      payment: parseFloat(monthlyPayment.toFixed(2)),
+      principal: parseFloat(principalPayment.toFixed(2)),
+      interest: parseFloat(interestPayment.toFixed(2)),
+      additionalCosts: 0, // Placeholder
+      remainingBalance: parseFloat(Math.max(balance, 0).toFixed(2)),
+    });
+  }
 
-      // Calculate due date
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(startDate.getMonth() + i);
-
-      schedule.push({
-        rank: i,
-        dueDate: dueDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
-        payment: parseFloat(monthlyPayment.toFixed(2)),
-        principal: parseFloat(principalPayment.toFixed(2)),
-        interest: parseFloat(interestPayment.toFixed(2)),
-        additionalCosts: 0, // Placeholder
-        remainingBalance: parseFloat(Math.max(balance, 0).toFixed(2)),
-      });
-    }
-
-    setAmortizationSchedule(schedule);
-  };
+  setAmortizationSchedule(schedule);
+};
 
   const t = translations[language];
 

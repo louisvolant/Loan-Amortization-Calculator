@@ -16,14 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mortgage Amortization Calculator",
-  description: "Calculate and rebuild your mortgage amortization schedule with ease.",
+  title: "Loan Amortization Calculator",
+  description: "Calculate and rebuild your loan amortization schedule with ease.",
   keywords: "mortgage calculator, loan amortization, amortization schedule, mortgage repayment, financial planning",
   openGraph: {
-    title: "Mortgage Amortization Calculator",
+    title: "Loan Amortization Calculator",
     description: "Easily calculate and visualize your mortgage amortization schedule based on loan details or sample data.",
     type: "website",
-    url: "https://amortization.louisvolant.com",
+    url: "https://loan-amortization-calculator.louisvolant.com",
     images: ["/icon_calculator.png"],
   },
   icons: [
@@ -50,7 +50,7 @@ export default function RootLayout({
               priority
               className="h-8 w-8 mr-2"
             />
-            <h1 className="text-2xl font-bold">Mortgage Amortization Calculator</h1>
+            <h1 className="text-2xl font-bold">Loan Amortization Calculator</h1>
           </div>
         </header>
         <main>{children}</main>
