@@ -131,13 +131,8 @@ export default function LoanAmortizationCalculator() {
     // We'll iterate and calculate month by month.
     const fullSchedule: AmortizationRow[] = [];
     let currentBalance = initialLoanAmount;
-    let currentEffectiveTermRemaining = totalLoanTermMonths; // This will adjust if payments are skipped/extra
     let lastProvidedRank = 0;
     let lastProvidedDueDate: Date | null = null;
-    let lastProvidedPayment: number | null = null; // To carry forward if applicable
-    let lastProvidedPrincipal: number | null = null;
-    let lastProvidedInterest: number | null = null;
-    let lastProvidedAdditionalCosts: number | null = null; // To carry forward the *last known* additional cost
 
     // Process and sort optional amortization table rows
     const filledTableRows = tableRows
@@ -172,10 +167,6 @@ export default function LoanAmortizationCalculator() {
       }
     }
 
-    // To handle the decreasing 'Accessoires', we'll use a dynamic `currentAdditionalCosts`
-    // Initialize currentAdditionalCosts based on the initial loan amount
-    let currentAdditionalCosts = initialLoanAmount * monthlyInsuranceRate; // Calculate initial insurance based on full loan amount
-
     // Iterate through each possible rank up to the total loan term
     for (let i = 1; i <= totalLoanTermMonths; i++) {
       const defaultDueDate = new Date();
@@ -209,10 +200,6 @@ export default function LoanAmortizationCalculator() {
         currentBalance = providedBalance;
         lastProvidedRank = i;
         lastProvidedDueDate = new Date(providedRow.dueDate);
-        lastProvidedPayment = providedPayment;
-        lastProvidedPrincipal = providedPrincipal;
-        lastProvidedInterest = providedInterest;
-        lastProvidedAdditionalCosts = providedAdditionalCosts; // Carry forward provided additional costs
 
         // If this provided row clears the loan, stop.
         if (currentBalance <= 0) {
@@ -253,7 +240,7 @@ export default function LoanAmortizationCalculator() {
 
         // Calculate additional costs based on the current remaining balance
         // If no insurance rate is provided, or if the optional row specified 0, it stays 0.
-        let calculatedAdditionalCosts = isNaN(monthlyInsuranceRate)
+        const calculatedAdditionalCosts = isNaN(monthlyInsuranceRate)
           ? 0
           : currentBalance * monthlyInsuranceRate;
         // If a last provided additional cost exists, use it if it seems consistent,
@@ -268,7 +255,7 @@ export default function LoanAmortizationCalculator() {
         // If it's an annuity loan whose payments are recalculated on remaining term:
         // We'll use the `currentMonthlyPayment` which was either the `originalLoanPrincipalInterestPayment`
         // or the recalculated one after an optional row.
-        let principalInterestPayment = currentMonthlyPayment; // The base payment for P+I
+        const principalInterestPayment = currentMonthlyPayment; // The base payment for P+I
 
         let principalPayment = principalInterestPayment - interestPayment;
 
