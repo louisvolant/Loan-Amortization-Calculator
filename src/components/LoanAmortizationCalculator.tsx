@@ -479,13 +479,24 @@ export default function LoanAmortizationCalculator() {
               </div>
               <div className="flex flex-col min-w-[150px]">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.remainingBalance}</label>
-                <input
-                  type="number"
-                  value={row.remainingBalance}
-                  onChange={(e) => updateTableRow(index, "remainingBalance", e.target.value)}
-                  placeholder={t.placeholders.remainingBalance}
-                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
-                />
+                <div className="flex items-end mt-1">
+                  <input
+                    type="number"
+                    value={row.remainingBalance}
+                    onChange={(e) => updateTableRow(index, "remainingBalance", e.target.value)}
+                    placeholder={t.placeholders.remainingBalance}
+                    className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                  />
+                  {tableRows.length > 1 && (
+                    <button
+                      onClick={() => removeTableRow(index)}
+                      className="ml-2 rounded-md bg-red-500 px-3 py-3 text-white hover:bg-red-600"
+                      title={t.removeRowButton}
+                    >
+                      &minus;
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
