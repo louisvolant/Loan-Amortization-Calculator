@@ -30,6 +30,7 @@ export interface Translations {
     loanTermLabel: string;
     optionalRowsTitle: string;
     addRowButton: string;
+    removeRowButton: string;
     calculateButton: string;
     amortizationScheduleTitle: string;
     downloadButton: string;

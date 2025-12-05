@@ -85,6 +85,13 @@ export default function LoanAmortizationCalculator() {
     }
   };
 
+  // Add this function
+  const removeTableRow = (index: number) => {
+    if (tableRows.length > 1) {
+      setTableRows(tableRows.filter((_, i) => i !== index));
+    }
+  };
+
   // Update a table row
   const updateTableRow = (index: number, field: keyof TableRowInput, value: string) => {
     const newRows = [...tableRows];
