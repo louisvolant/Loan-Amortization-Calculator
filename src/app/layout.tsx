@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://loan-amortization-calculator.louisvolant.com"),
   title: "Loan Amortization Calculator",
   description: "Calculate and rebuild your loan amortization schedule with ease.",
   keywords: "mortgage calculator, loan amortization, amortization schedule, mortgage repayment, financial planning",
