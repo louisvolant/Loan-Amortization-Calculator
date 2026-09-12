@@ -1,0 +1,12 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "loan-amortization-calculator"
+compatibility_date = "2024-09-23"
+
+# Retain environment variables configured in Cloudflare Dashboard across deployments
+keep_vars = true
+
+# Static assets configuration for Next.js static export
+[assets]
+directory = "./out"
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"

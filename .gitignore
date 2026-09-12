@@ -130,3 +130,8 @@ dist
 .pnp.*
 /loan-amortization-calculator.iml
 /.idea/
+
+# Cloudflare Wrangler
+.wrangler/
+.dev.vars*
+
