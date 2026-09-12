@@ -46,38 +46,76 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
 ### Project Structure
 
 mortgage-amortization-calculator/
-├── public/                     # Static assets (e.g., icon_mortgage.png, icon_mortgage.svg)
+├── public/                     # Static assets (e.g., icon_calculator.png, icon_calculator.svg)
 ├── src/
 │   ├── app/                    # Next.js app router
 │   │   ├── globals.css         # Global styles with Tailwind CSS
 │   │   ├── layout.tsx          # Root layout with metadata and header/footer
 │   │   ├── page.tsx            # Home page rendering LoanAmortizationCalculator
 │   │   ├── Footer.tsx          # Footer component with theme toggle
-│   │   └── links.ts            # External links for footer
+│   │   ├── links.ts            # External links for footer
+│   │   └── sitemap.ts          # Sitemap generator
 │   ├── components/             # React components
 │   │   └── LoanAmortizationCalculator.tsx # Main calculator component
+│   └── utils/                  # TypeScript interfaces and localization
+├── next.config.ts              # Next.js configuration (static export)
 ├── package.json                # Project dependencies and scripts
-├── tailwind.config.js          # Tailwind CSS configuration
 ├── tsconfig.json               # TypeScript configuration
+├── wrangler.toml               # Cloudflare Workers configuration
 └── README.md                   # Project documentation
 
 
 ## Technologies Used
 
-- Next.js (15.x): React framework for server-side rendering and static site generation.
+- Next.js (16.x): React framework configured for static export (`output: "export"`).
 - React.js (19.x): Component-based UI library.
-- Tailwind CSS (3.x): Utility-first CSS framework for styling.
+- Tailwind CSS (4.x): Utility-first CSS framework for modern styling.
 - TypeScript: Static typing for JavaScript.
+- Cloudflare Workers / Assets: Fast and globally distributed hosting via Wrangler.
 - Local Storage: Browser API for persistent state.
 - Geist Font: Modern typography via Next.js font optimization.
 
 
-## Building for Production
+## Development & Deployment
 
-To create a production build, run:
+### Local Development
+
+Run the development server with Turbopack:
+```bash
+npm run dev
+```
+
+### Building for Production
+
+Build the static site output to the `./out` directory:
 ```bash
 npm run build
 ```
+
+### Previewing with Cloudflare Wrangler
+
+Test the static build locally using Wrangler's local development server:
+```bash
+npm run preview
+```
+
+### Deploying to Cloudflare
+
+Deploy the application to Cloudflare Workers with static assets:
+```bash
+npm run deploy
+```
+
+> **Note on `keep_vars = true`**:
+> The `wrangler.toml` configuration specifies `keep_vars = true`. This ensures that any environment variables or secrets defined in the Cloudflare Dashboard are preserved across deployments and not overwritten or deleted by Wrangler.
+
+### Custom Domain Setup
+
+To attach a custom domain (e.g., `loan-amortization-calculator.louisvolant.com`):
+1. Navigate to the Worker in the **Cloudflare Dashboard**.
+2. Go to **Settings > Domains & Routes**.
+3. Add your custom domain. Cloudflare handles DNS records and SSL/TLS certificates automatically.
+
 
 ## Type Checking
 
