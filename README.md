@@ -16,6 +16,7 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
   - **Monthly Breakdown**: Granular month-by-month stacked distribution.
   - **KPI Summary Cards**: Real-time totals for principal, interest, insurance, and total cost of the loan.
 - **Smart Schedule Pagination**: Convenient pagination controls for long loan schedules (e.g., 360-month mortgages) with customizable page size (12, 24, 60, 120, or all payments), navigation buttons (First, Prev, Next, Last), and item range indicators.
+- **Comprehensive Multi-Language Localization**: Full localization across 7 languages (**English**, **Français**, **Italiano**, **Español**, **Deutsch**, **Українська**, **Português**) with persistent language selection saved in local storage across browser sessions.
 - **Optional Table Row Input**: Rebuild schedules by entering up to three rows from an existing amortization table.
 - **Persistent State**: Form inputs, loan configurations, and calculated schedules are saved to local storage, restoring the last state on page reload.
 - **Responsive Design**: Mobile-friendly interface with a colorful gradient theme using Tailwind CSS.

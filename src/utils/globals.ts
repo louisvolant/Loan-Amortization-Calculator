@@ -20,7 +20,7 @@ export interface TableRowInput {
   remainingBalance: string;
 }
 
-export type Language = "en" | "es" | "fr";
+export type Language = "en" | "fr" | "it" | "es" | "de" | "uk" | "pt";
 export type LoanType = "amortizing" | "interest_only";
 export type RateType = "fixed" | "variable";
 

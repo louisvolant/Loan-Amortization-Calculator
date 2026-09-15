@@ -1,7 +1,7 @@
 // src/components/LoanAmortizationCalculator.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { translations } from "../utils/translations";
 import { AmortizationRow, TableRowInput, Language, LoanType, RateType, RateAdjustment } from "../utils/globals";
 import { validateLoanInputs } from "../utils/validation";
@@ -62,10 +62,14 @@ export default function LoanAmortizationCalculator() {
     );
   }, [loanAmount, interestRate, loanTermMonths, insuranceRate, loanType, interestOnlyMonths, rateType, rateAdjustments, t.validation]);
 
+  const [hasLoaded, setHasLoaded] = useState(false);
+
   // Load state from localStorage
   useEffect(() => {
     try {
       const savedState = localStorage.getItem("mortgageCalculatorState");
+      const storedLang = localStorage.getItem("mortgageCalculatorLanguage");
+
       if (savedState) {
         const parsedState = JSON.parse(savedState);
         setLoanAmount(parsedState.loanAmount || "");
@@ -76,21 +80,25 @@ export default function LoanAmortizationCalculator() {
         setInterestOnlyMonths(parsedState.interestOnlyMonths || "24");
         setRateType(parsedState.rateType || "fixed");
         setRateAdjustments(parsedState.rateAdjustments || []);
-        setTableRows(
-          parsedState.tableRows || [
-            // ...
-          ]
-        );
+        setTableRows(parsedState.tableRows || []);
         setAmortizationSchedule(parsedState.amortizationSchedule || []);
-        setLanguage(parsedState.language || "en");
+        const activeLang = storedLang || parsedState.language;
+        if (activeLang && ["en", "fr", "it", "es", "de", "uk", "pt"].includes(activeLang)) {
+          setLanguage(activeLang as Language);
+        }
+      } else if (storedLang && ["en", "fr", "it", "es", "de", "uk", "pt"].includes(storedLang)) {
+        setLanguage(storedLang as Language);
       }
     } catch (error) {
       console.error("Error loading from localStorage:", error);
+    } finally {
+      setHasLoaded(true);
     }
   }, []);
 
   // Save state to localStorage
   useEffect(() => {
+    if (!hasLoaded) return;
     try {
       const stateToSave = {
         loanAmount,
@@ -106,10 +114,12 @@ export default function LoanAmortizationCalculator() {
         language,
       };
       localStorage.setItem("mortgageCalculatorState", JSON.stringify(stateToSave));
+      localStorage.setItem("mortgageCalculatorLanguage", language);
     } catch (error) {
       console.error("Error saving to localStorage:", error);
     }
   }, [
+    hasLoaded,
     loanAmount,
     interestRate,
     loanTermMonths,
@@ -429,13 +439,26 @@ export default function LoanAmortizationCalculator() {
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400">{t.title}</h2>
         <select
+          data-testid="select-language"
           value={language}
-          onChange={(e) => setLanguage(e.target.value as Language)}
-          className="rounded-md border border-gray-300 bg-gray-50 p-2 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+          onChange={(e) => {
+            const nextLang = e.target.value as Language;
+            setLanguage(nextLang);
+            try {
+              localStorage.setItem("mortgageCalculatorLanguage", nextLang);
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+          className="rounded-md border border-gray-300 bg-gray-50 p-2 font-medium focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
         >
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
+          <option value="en">English (EN)</option>
+          <option value="fr">Français (FR)</option>
+          <option value="it">Italiano (IT)</option>
+          <option value="es">Español (ES)</option>
+          <option value="de">Deutsch (DE)</option>
+          <option value="uk">Українська (UK)</option>
+          <option value="pt">Português (PT)</option>
         </select>
       </div>
 
