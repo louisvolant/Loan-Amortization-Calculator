@@ -40,21 +40,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 transition-colors duration-300`}>
-        <header className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 text-white py-4 shadow-md">
-          <div className="container mx-auto px-4 flex items-center">
-            <Image
-              src="/icon_calculator.png"
-              alt="Mortgage Calculator Logo"
-              width={32}
-              height={32}
-              priority
-              className="h-8 w-8 mr-2"
-            />
-            <h1 className="text-2xl font-bold">Loan Amortization Calculator</h1>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200`}>
+        <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/80 shadow-xs">
+          <div className="container mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center p-1.5 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-sm">
+                <Image
+                  src="/icon_calculator.png"
+                  alt="Mortgage Calculator Logo"
+                  width={28}
+                  height={28}
+                  priority
+                  className="h-7 w-7 rounded-lg"
+                />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  Loan Amortization Calculator
+                </h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+                  Smart mortgage schedule & visualization
+                </p>
+              </div>
+            </div>
           </div>
         </header>
-        <main>{children}</main>
+        <main className="flex-1">{children}</main>
         <Footer />
       </body>
     </html>

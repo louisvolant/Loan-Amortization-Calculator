@@ -434,38 +434,63 @@ export default function LoanAmortizationCalculator() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+    <div className="max-w-5xl mx-auto my-8 p-6 sm:p-10 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-xl rounded-3xl transition-colors">
       {/* Header and Language Selector */}
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400">{t.title}</h2>
-        <select
-          data-testid="select-language"
-          value={language}
-          onChange={(e) => {
-            const nextLang = e.target.value as Language;
-            setLanguage(nextLang);
-            try {
-              localStorage.setItem("mortgageCalculatorLanguage", nextLang);
-            } catch (err) {
-              console.error(err);
-            }
-          }}
-          className="rounded-md border border-gray-300 bg-gray-50 p-2 font-medium focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-        >
-          <option value="en">English (EN)</option>
-          <option value="fr">Français (FR)</option>
-          <option value="it">Italiano (IT)</option>
-          <option value="es">Español (ES)</option>
-          <option value="de">Deutsch (DE)</option>
-          <option value="uk">Українська (UK)</option>
-          <option value="pt">Português (PT)</option>
-        </select>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {t.title}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            {language === "fr"
+              ? "Calculez et simulez vos échéances de prêt avec visualisation interactive."
+              : language === "es"
+              ? "Calcule y simule sus cuotas de préstamo con visualización interactiva."
+              : language === "it"
+              ? "Calcola e simula il piano di ammortamento con grafici interattivi."
+              : language === "de"
+              ? "Berechnen und simulieren Sie Ihre Tilgungspläne mit interaktiven Diagrammen."
+              : language === "uk"
+              ? "Розраховуйте графік погашення кредиту з інтерактивними діаграмами."
+              : language === "pt"
+              ? "Calcule e simule parcelas de empréstimo com gráficos interativos."
+              : "Plan and simulate your loan schedule with interactive charts and analytics."}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <label htmlFor="select-language" className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Language:
+          </label>
+          <select
+            id="select-language"
+            data-testid="select-language"
+            value={language}
+            onChange={(e) => {
+              const nextLang = e.target.value as Language;
+              setLanguage(nextLang);
+              try {
+                localStorage.setItem("mortgageCalculatorLanguage", nextLang);
+              } catch (err) {
+                console.error(err);
+              }
+            }}
+            className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer"
+          >
+            <option value="en">English (EN)</option>
+            <option value="fr">Français (FR)</option>
+            <option value="it">Italiano (IT)</option>
+            <option value="es">Español (ES)</option>
+            <option value="de">Deutsch (DE)</option>
+            <option value="uk">Українська (UK)</option>
+            <option value="pt">Português (PT)</option>
+          </select>
+        </div>
       </div>
 
       {/* Loan Details Form */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label htmlFor="loanAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="loanAmount" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             {t.loanAmountLabel}
           </label>
           <input
@@ -478,10 +503,10 @@ export default function LoanAmortizationCalculator() {
               setTouched((prev) => ({ ...prev, loanAmount: true }));
             }}
             onBlur={() => setTouched((prev) => ({ ...prev, loanAmount: true }))}
-            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+            className={`w-full rounded-xl border p-3 text-sm font-medium min-w-[100px] transition-all shadow-xs outline-none ${
               touched.loanAmount && errors.loanAmount
-                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+                ? "border-red-400 bg-red-50/40 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-red-500 dark:bg-red-950/20 dark:text-red-100"
+                : "border-slate-200 bg-slate-50/50 text-slate-900 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:focus:bg-slate-800"
             }`}
             placeholder={t.placeholders.loanAmount}
             aria-invalid={touched.loanAmount && !!errors.loanAmount}
@@ -493,7 +518,7 @@ export default function LoanAmortizationCalculator() {
           )}
         </div>
         <div>
-          <label htmlFor="interestRate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="interestRate" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             {t.interestRateLabel}
           </label>
           <input
@@ -507,10 +532,10 @@ export default function LoanAmortizationCalculator() {
               setTouched((prev) => ({ ...prev, interestRate: true }));
             }}
             onBlur={() => setTouched((prev) => ({ ...prev, interestRate: true }))}
-            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+            className={`w-full rounded-xl border p-3 text-sm font-medium min-w-[100px] transition-all shadow-xs outline-none ${
               touched.interestRate && errors.interestRate
-                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+                ? "border-red-400 bg-red-50/40 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-red-500 dark:bg-red-950/20 dark:text-red-100"
+                : "border-slate-200 bg-slate-50/50 text-slate-900 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:focus:bg-slate-800"
             }`}
             placeholder={t.placeholders.interestRate}
             aria-invalid={touched.interestRate && !!errors.interestRate}
@@ -522,7 +547,7 @@ export default function LoanAmortizationCalculator() {
           )}
         </div>
         <div>
-          <label htmlFor="loanTermMonths" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="loanTermMonths" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             {t.loanTermLabel}
           </label>
           <input
@@ -535,10 +560,10 @@ export default function LoanAmortizationCalculator() {
               setTouched((prev) => ({ ...prev, loanTermMonths: true }));
             }}
             onBlur={() => setTouched((prev) => ({ ...prev, loanTermMonths: true }))}
-            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+            className={`w-full rounded-xl border p-3 text-sm font-medium min-w-[100px] transition-all shadow-xs outline-none ${
               touched.loanTermMonths && errors.loanTermMonths
-                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+                ? "border-red-400 bg-red-50/40 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-red-500 dark:bg-red-950/20 dark:text-red-100"
+                : "border-slate-200 bg-slate-50/50 text-slate-900 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:focus:bg-slate-800"
             }`}
             placeholder={t.placeholders.loanTerm}
             aria-invalid={touched.loanTermMonths && !!errors.loanTermMonths}
@@ -550,7 +575,7 @@ export default function LoanAmortizationCalculator() {
           )}
         </div>
         <div>
-          <label htmlFor="insuranceRate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="insuranceRate" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             {t.insuranceRateLabel}
           </label>
           <input
@@ -564,10 +589,10 @@ export default function LoanAmortizationCalculator() {
               setTouched((prev) => ({ ...prev, insuranceRate: true }));
             }}
             onBlur={() => setTouched((prev) => ({ ...prev, insuranceRate: true }))}
-            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+            className={`w-full rounded-xl border p-3 text-sm font-medium min-w-[100px] transition-all shadow-xs outline-none ${
               touched.insuranceRate && errors.insuranceRate
-                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+                ? "border-red-400 bg-red-50/40 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-red-500 dark:bg-red-950/20 dark:text-red-100"
+                : "border-slate-200 bg-slate-50/50 text-slate-900 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:focus:bg-slate-800"
             }`}
             placeholder={t.placeholders.insuranceRate}
             aria-invalid={touched.insuranceRate && !!errors.insuranceRate}
@@ -581,9 +606,9 @@ export default function LoanAmortizationCalculator() {
       </div>
 
       {/* Loan Type & Structure Selector */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="loanType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="loanType" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             {t.loanTypeLabel}
           </label>
           <select
@@ -591,7 +616,7 @@ export default function LoanAmortizationCalculator() {
             data-testid="select-loan-type"
             value={loanType}
             onChange={(e) => setLoanType(e.target.value as LoanType)}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 p-3 text-sm font-medium text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 shadow-xs outline-none transition-all cursor-pointer"
           >
             <option value="amortizing">{t.loanTypeAmortizing}</option>
             <option value="interest_only">{t.loanTypeInterestOnly}</option>
@@ -599,7 +624,7 @@ export default function LoanAmortizationCalculator() {
         </div>
 
         <div>
-          <label htmlFor="rateType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor="rateType" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             {t.rateTypeLabel}
           </label>
           <select
@@ -607,7 +632,7 @@ export default function LoanAmortizationCalculator() {
             data-testid="select-rate-type"
             value={rateType}
             onChange={(e) => setRateType(e.target.value as RateType)}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 p-3 text-sm font-medium text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 shadow-xs outline-none transition-all cursor-pointer"
           >
             <option value="fixed">{t.rateTypeFixed}</option>
             <option value="variable">{t.rateTypeVariable}</option>
@@ -617,8 +642,8 @@ export default function LoanAmortizationCalculator() {
 
       {/* Interest-Only Configuration */}
       {loanType === "interest_only" && (
-        <div className="mb-6 p-4 rounded-md border border-blue-200 bg-blue-50/50 dark:border-blue-900/50 dark:bg-blue-950/20" data-testid="interest-only-config">
-          <label htmlFor="interestOnlyMonths" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="mb-6 p-5 rounded-2xl border border-blue-200/70 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:border-blue-900/40 dark:from-blue-950/20 dark:to-indigo-950/10 shadow-xs" data-testid="interest-only-config">
+          <label htmlFor="interestOnlyMonths" className="block text-xs font-bold uppercase tracking-wider text-blue-900 dark:text-blue-300 mb-1.5">
             {t.interestOnlyMonthsLabel}
           </label>
           <input
@@ -631,10 +656,10 @@ export default function LoanAmortizationCalculator() {
               setTouched((prev) => ({ ...prev, interestOnlyMonths: true }));
             }}
             onBlur={() => setTouched((prev) => ({ ...prev, interestOnlyMonths: true }))}
-            className={`mt-1 w-full sm:w-1/2 rounded-md border bg-gray-50 p-3 text-base transition-colors dark:bg-gray-700 ${
+            className={`w-full sm:w-1/2 rounded-xl border p-3 text-sm font-medium transition-all shadow-xs outline-none ${
               touched.interestOnlyMonths && errors.interestOnlyMonths
-                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+                ? "border-red-400 bg-red-50/40 text-red-900 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-red-500 dark:bg-red-950/20 dark:text-red-100"
+                : "border-blue-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             }`}
             placeholder="24"
             aria-invalid={touched.interestOnlyMonths && !!errors.interestOnlyMonths}
@@ -649,22 +674,22 @@ export default function LoanAmortizationCalculator() {
 
       {/* Variable Rate Schedule */}
       {rateType === "variable" && (
-        <div className="mb-6 p-4 rounded-md border border-purple-200 bg-purple-50/50 dark:border-purple-900/50 dark:bg-purple-950/20" data-testid="variable-rate-config">
+        <div className="mb-6 p-5 rounded-2xl border border-purple-200/70 bg-gradient-to-br from-purple-50/60 to-pink-50/40 dark:border-purple-900/40 dark:from-purple-950/20 dark:to-pink-950/10 shadow-xs" data-testid="variable-rate-config">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-md font-semibold text-gray-800 dark:text-gray-200">{t.variableRateTitle}</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-purple-950 dark:text-purple-300">{t.variableRateTitle}</h3>
             {rateAdjustments.length < 5 && (
               <button
                 type="button"
                 onClick={addRateAdjustment}
                 data-testid="add-rate-adjustment-button"
-                className="rounded-md bg-purple-600 px-3 py-1.5 text-xs text-white hover:bg-purple-700"
+                className="rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-purple-700 transition-colors cursor-pointer"
               >
-                {t.addRateAdjustmentButton}
+                + {t.addRateAdjustmentButton}
               </button>
             )}
           </div>
           {rateAdjustments.length === 0 ? (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               No adjustments added yet. Click &quot;{t.addRateAdjustmentButton}&quot; to define rate changes.
             </p>
           ) : (
@@ -674,7 +699,7 @@ export default function LoanAmortizationCalculator() {
                 return (
                   <div key={index} className="flex flex-wrap items-end gap-3" data-testid={`rate-adjustment-row-${index}`}>
                     <div className="flex-1 min-w-[130px]">
-                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                         {t.startMonthLabel}
                       </label>
                       <input
@@ -683,18 +708,18 @@ export default function LoanAmortizationCalculator() {
                         value={adj.startMonth}
                         onChange={(e) => updateRateAdjustment(index, "startMonth", e.target.value)}
                         placeholder="13"
-                        className={`mt-1 w-full rounded-md border bg-gray-50 p-2 text-sm dark:bg-gray-700 ${
-                          adjErr?.startMonth ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                        className={`w-full rounded-xl border bg-white p-2.5 text-sm dark:bg-slate-800 outline-none shadow-xs transition-colors ${
+                          adjErr?.startMonth ? "border-red-500" : "border-slate-300 dark:border-slate-700 focus:border-purple-500"
                         }`}
                       />
                       {adjErr?.startMonth && (
-                        <p className="mt-0.5 text-xs text-red-500" data-testid={`adj-error-start-month-${index}`}>
+                        <p className="mt-1 text-xs text-red-500 font-medium" data-testid={`adj-error-start-month-${index}`}>
                           {adjErr.startMonth}
                         </p>
                       )}
                     </div>
                     <div className="flex-1 min-w-[130px]">
-                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                         {t.adjustedRateLabel}
                       </label>
                       <input
@@ -704,12 +729,12 @@ export default function LoanAmortizationCalculator() {
                         value={adj.rate}
                         onChange={(e) => updateRateAdjustment(index, "rate", e.target.value)}
                         placeholder="4.5"
-                        className={`mt-1 w-full rounded-md border bg-gray-50 p-2 text-sm dark:bg-gray-700 ${
-                          adjErr?.rate ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                        className={`w-full rounded-xl border bg-white p-2.5 text-sm dark:bg-slate-800 outline-none shadow-xs transition-colors ${
+                          adjErr?.rate ? "border-red-500" : "border-slate-300 dark:border-slate-700 focus:border-purple-500"
                         }`}
                       />
                       {adjErr?.rate && (
-                        <p className="mt-0.5 text-xs text-red-500" data-testid={`adj-error-rate-${index}`}>
+                        <p className="mt-1 text-xs text-red-500 font-medium" data-testid={`adj-error-rate-${index}`}>
                           {adjErr.rate}
                         </p>
                       )}
@@ -718,7 +743,7 @@ export default function LoanAmortizationCalculator() {
                       type="button"
                       onClick={() => removeRateAdjustment(index)}
                       data-testid={`remove-rate-adj-${index}`}
-                      className="rounded-md bg-red-500 px-3 py-2 text-xs text-white hover:bg-red-600"
+                      className="rounded-xl bg-rose-500 px-3.5 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-rose-600 transition-colors cursor-pointer"
                     >
                       {t.removeRateAdjustmentButton}
                     </button>
@@ -731,115 +756,115 @@ export default function LoanAmortizationCalculator() {
       )}
 
       {/* Optional Amortization Table Rows */}
-        <div className="mb-6">
-          <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">{t.optionalRowsTitle}</h3>
-          {tableRows.map((row, index) => (
-            <div key={index} className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              <div className="flex flex-col min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.rank}</label>
+      <div className="mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20 p-5">
+        <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">{t.optionalRowsTitle}</h3>
+        {tableRows.map((row, index) => (
+          <div key={index} className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            <div className="flex flex-col min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.placeholders.rank}</label>
+              <input
+                type="number"
+                value={row.rank}
+                onChange={(e) => updateTableRow(index, "rank", e.target.value)}
+                placeholder={t.placeholders.rank}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm dark:text-slate-100 shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 w-full"
+              />
+            </div>
+            <div className="flex flex-col min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.placeholders.dueDate}</label>
+              <input
+                type="date"
+                value={row.dueDate}
+                onChange={(e) => updateTableRow(index, "dueDate", e.target.value)}
+                placeholder={t.placeholders.dueDate}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm dark:text-slate-100 shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 w-full"
+              />
+            </div>
+            <div className="flex flex-col min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.placeholders.payment}</label>
+              <input
+                type="number"
+                value={row.payment}
+                onChange={(e) => updateTableRow(index, "payment", e.target.value)}
+                placeholder={t.placeholders.payment}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm dark:text-slate-100 shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 w-full"
+              />
+            </div>
+            <div className="flex flex-col min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.placeholders.principal}</label>
+              <input
+                type="number"
+                value={row.principal}
+                onChange={(e) => updateTableRow(index, "principal", e.target.value)}
+                placeholder={t.placeholders.principal}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm dark:text-slate-100 shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 w-full"
+              />
+            </div>
+            <div className="flex flex-col min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.placeholders.interest}</label>
+              <input
+                type="number"
+                value={row.interest}
+                onChange={(e) => updateTableRow(index, "interest", e.target.value)}
+                placeholder={t.placeholders.interest}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm dark:text-slate-100 shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 w-full"
+              />
+            </div>
+            <div className="flex flex-col min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.placeholders.additionalCosts}</label>
+              <input
+                type="number"
+                value={row.additionalCosts}
+                onChange={(e) => updateTableRow(index, "additionalCosts", e.target.value)}
+                placeholder={t.placeholders.additionalCosts}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm dark:text-slate-100 shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 w-full"
+              />
+            </div>
+            <div className="flex flex-col min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{t.placeholders.remainingBalance}</label>
+              <div className="flex items-center">
                 <input
                   type="number"
-                  value={row.rank}
-                  onChange={(e) => updateTableRow(index, "rank", e.target.value)}
-                  placeholder={t.placeholders.rank}
-                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
+                  value={row.remainingBalance}
+                  onChange={(e) => updateTableRow(index, "remainingBalance", e.target.value)}
+                  placeholder={t.placeholders.remainingBalance}
+                  className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm dark:text-slate-100 shadow-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 w-full"
                 />
-              </div>
-              <div className="flex flex-col min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.dueDate}</label>
-                <input
-                  type="date"
-                  value={row.dueDate}
-                  onChange={(e) => updateTableRow(index, "dueDate", e.target.value)}
-                  placeholder={t.placeholders.dueDate}
-                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
-                />
-              </div>
-              <div className="flex flex-col min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.payment}</label>
-                <input
-                  type="number"
-                  value={row.payment}
-                  onChange={(e) => updateTableRow(index, "payment", e.target.value)}
-                  placeholder={t.placeholders.payment}
-                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
-                />
-              </div>
-              <div className="flex flex-col min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.principal}</label>
-                <input
-                  type="number"
-                  value={row.principal}
-                  onChange={(e) => updateTableRow(index, "principal", e.target.value)}
-                  placeholder={t.placeholders.principal}
-                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
-                />
-              </div>
-              <div className="flex flex-col min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.interest}</label>
-                <input
-                  type="number"
-                  value={row.interest}
-                  onChange={(e) => updateTableRow(index, "interest", e.target.value)}
-                  placeholder={t.placeholders.interest}
-                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
-                />
-              </div>
-              <div className="flex flex-col min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.additionalCosts}</label>
-                <input
-                  type="number"
-                  value={row.additionalCosts}
-                  onChange={(e) => updateTableRow(index, "additionalCosts", e.target.value)}
-                  placeholder={t.placeholders.additionalCosts}
-                  className="mt-1 rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
-                />
-              </div>
-              <div className="flex flex-col min-w-[150px]">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.placeholders.remainingBalance}</label>
-                <div className="flex items-end mt-1">
-                  <input
-                    type="number"
-                    value={row.remainingBalance}
-                    onChange={(e) => updateTableRow(index, "remainingBalance", e.target.value)}
-                    placeholder={t.placeholders.remainingBalance}
-                    className="rounded-md border border-gray-300 bg-gray-50 p-3 text-base dark:border-gray-600 dark:bg-gray-700 w-full"
-                  />
-                  {tableRows.length > 1 && (
-                    <button
-                      onClick={() => removeTableRow(index)}
-                      className="ml-2 rounded-md bg-red-500 px-3 py-3 text-white hover:bg-red-600"
-                      title={t.removeRowButton}
-                    >
-                      &minus;
-                    </button>
-                  )}
-                </div>
+                {tableRows.length > 1 && (
+                  <button
+                    onClick={() => removeTableRow(index)}
+                    className="ml-2 rounded-xl bg-rose-500 px-3 py-2.5 text-white font-bold hover:bg-rose-600 shadow-xs transition-colors cursor-pointer"
+                    title={t.removeRowButton}
+                  >
+                    &minus;
+                  </button>
+                )}
               </div>
             </div>
-          ))}
-          {tableRows.length < 3 && (
-            <button
-              onClick={addTableRow}
-              className="mt-2 rounded-md bg-purple-500 px-4 py-2 text-white hover:bg-purple-600"
-            >
-              {t.addRowButton}
-            </button>
-          )}
-        </div>
+          </div>
+        ))}
+        {tableRows.length < 3 && (
+          <button
+            onClick={addTableRow}
+            className="mt-2 inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 transition-colors cursor-pointer"
+          >
+            + {t.addRowButton}
+          </button>
+        )}
+      </div>
 
       {/* Calculate Button */}
       <button
         onClick={calculateAmortization}
         data-testid="calculate-button"
-        className="w-full rounded-md bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600 disabled:opacity-50"
+        className="w-full rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-4 text-base font-bold text-white shadow-lg shadow-indigo-500/20 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
       >
         {t.calculateButton}
       </button>
 
       {/* Error Message */}
       {error && (
-        <p className="mt-4 text-center text-red-500 font-medium" role="alert" data-testid="error-summary">
+        <p className="mt-4 text-center text-sm text-red-500 font-semibold" role="alert" data-testid="error-summary">
           {error}
         </p>
       )}
@@ -851,12 +876,12 @@ export default function LoanAmortizationCalculator() {
 
       {/* Amortization Table */}
       {amortizationSchedule.length > 0 && (
-        <div className="mt-8 overflow-x-auto">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t.amortizationScheduleTitle}</h3>
+        <div className="mt-10 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
+          <div className="border-b border-slate-200 dark:border-slate-800 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 bg-slate-50/80 dark:bg-slate-800/40">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">{t.amortizationScheduleTitle}</h3>
 
             {/* Rows per page selector */}
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
               <span>{t.pagination.rowsPerPage}</span>
               <select
                 data-testid="select-rows-per-page"
@@ -866,7 +891,7 @@ export default function LoanAmortizationCalculator() {
                   setRowsPerPage(val === "all" ? "all" : parseInt(val));
                   setCurrentPage(1);
                 }}
-                className="rounded border border-gray-300 bg-white p-1 text-sm dark:border-gray-600 dark:bg-gray-700"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 text-xs text-slate-700 dark:text-slate-200 shadow-xs outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="12">12</option>
                 <option value="24">24</option>
@@ -877,36 +902,59 @@ export default function LoanAmortizationCalculator() {
             </div>
           </div>
 
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="bg-blue-100 dark:bg-blue-900">
-                <th className="border-b p-2">{t.tableHeaders.rank}</th>
-                <th className="border-b p-2">{t.tableHeaders.dueDate}</th>
-                <th className="border-b p-2">{t.tableHeaders.payment}</th>
-                <th className="border-b p-2">{t.tableHeaders.principal}</th>
-                <th className="border-b p-2">{t.tableHeaders.interest}</th>
-                <th className="border-b p-2">{t.tableHeaders.additionalCosts}</th>
-                <th className="border-b p-2">{t.tableHeaders.remainingBalance}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedRows.map((row) => (
-                <tr key={row.rank} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="border-b p-2">{row.rank}</td>
-                  <td className="border-b p-2">{row.dueDate}</td>
-                  <td className="border-b p-2">{row.payment.toFixed(2)}</td>
-                  <td className="border-b p-2">{row.principal.toFixed(2)}</td>
-                  <td className="border-b p-2">{row.interest.toFixed(2)}</td>
-                  <td className="border-b p-2">{row.additionalCosts.toFixed(2)}</td>
-                  <td className="border-b p-2">{row.remainingBalance.toFixed(2)}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-100/75 text-xs font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300">
+                  <th className="p-3 text-center w-16">{t.tableHeaders.rank}</th>
+                  <th className="p-3">{t.tableHeaders.dueDate}</th>
+                  <th className="p-3 text-right">{t.tableHeaders.payment}</th>
+                  <th className="p-3 text-right">{t.tableHeaders.principal}</th>
+                  <th className="p-3 text-right">{t.tableHeaders.interest}</th>
+                  <th className="p-3 text-right">{t.tableHeaders.additionalCosts}</th>
+                  <th className="p-3 text-right">{t.tableHeaders.remainingBalance}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-xs sm:text-sm">
+                {displayedRows.map((row, idx) => (
+                  <tr
+                    key={row.rank}
+                    className={`transition-colors ${
+                      idx % 2 === 0
+                        ? "bg-white dark:bg-slate-900"
+                        : "bg-slate-50/50 dark:bg-slate-900/50"
+                    } hover:bg-blue-50/60 dark:hover:bg-slate-800/60`}
+                  >
+                    <td className="p-3 text-center font-sans font-medium text-slate-500 dark:text-slate-400">
+                      {row.rank}
+                    </td>
+                    <td className="p-3 font-sans text-slate-700 dark:text-slate-300">
+                      {row.dueDate}
+                    </td>
+                    <td className="p-3 text-right font-semibold text-slate-900 dark:text-slate-100">
+                      {row.payment.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right text-blue-600 dark:text-blue-400">
+                      {row.principal.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right text-amber-600 dark:text-amber-400">
+                      {row.interest.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right text-emerald-600 dark:text-emerald-400">
+                      {row.additionalCosts.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right font-medium text-slate-700 dark:text-slate-300">
+                      {row.remainingBalance.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination Controls */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300" data-testid="pagination-controls">
-            <div data-testid="pagination-info">
+          <div className="border-t border-slate-200 dark:border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/20" data-testid="pagination-controls">
+            <div data-testid="pagination-info" className="font-medium">
               {t.pagination.showing
                 .replace("{start}", totalRows > 0 ? (startIndex + 1).toString() : "0")
                 .replace("{end}", endIndex.toString())
@@ -914,13 +962,13 @@ export default function LoanAmortizationCalculator() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   data-testid="pagination-first"
                   onClick={() => setCurrentPage(1)}
                   disabled={safeCurrentPage === 1}
-                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors cursor-pointer"
                   title={t.pagination.first}
                 >
                   &laquo;
@@ -930,12 +978,12 @@ export default function LoanAmortizationCalculator() {
                   data-testid="pagination-prev"
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={safeCurrentPage === 1}
-                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors cursor-pointer"
                   title={t.pagination.previous}
                 >
                   &lsaquo;
                 </button>
-                <span className="px-2" data-testid="pagination-page-indicator">
+                <span className="px-2 font-medium" data-testid="pagination-page-indicator">
                   {t.pagination.pageOf
                     .replace("{current}", safeCurrentPage.toString())
                     .replace("{total}", totalPages.toString())}
@@ -945,7 +993,7 @@ export default function LoanAmortizationCalculator() {
                   data-testid="pagination-next"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={safeCurrentPage === totalPages}
-                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors cursor-pointer"
                   title={t.pagination.next}
                 >
                   &rsaquo;
@@ -955,7 +1003,7 @@ export default function LoanAmortizationCalculator() {
                   data-testid="pagination-last"
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={safeCurrentPage === totalPages}
-                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="rounded-lg px-2.5 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors cursor-pointer"
                   title={t.pagination.last}
                 >
                   &raquo;
@@ -964,12 +1012,15 @@ export default function LoanAmortizationCalculator() {
             )}
           </div>
 
-          <button
-            onClick={handleDownload}
-            className="mt-4 rounded-md bg-green-500 px-4 py-2 text-white transition-colors hover:bg-green-600"
-          >
-            {t.downloadButton}
-          </button>
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+            <button
+              onClick={handleDownload}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all cursor-pointer"
+            >
+              <span>📥</span>
+              <span>{t.downloadButton}</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

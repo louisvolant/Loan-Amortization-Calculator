@@ -45,6 +45,32 @@ export default function AmortizationChart({ schedule, translations: t }: Amortiz
   const [view, setView] = useState<ChartView>("annual");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstance = useRef<Chart | null>(null);
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
+
+  // Keep chart styling reactive to dark/light theme changes
+  useEffect(() => {
+    const checkTheme = () => {
+      if (typeof document !== "undefined") {
+        const isDark = document.documentElement.classList.contains("dark");
+        setThemeMode(isDark ? "dark" : "light");
+      }
+    };
+    checkTheme();
+
+    const observer = new MutationObserver(checkTheme);
+    if (typeof document !== "undefined") {
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
+
+    window.addEventListener("themechange", checkTheme);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("themechange", checkTheme);
+    };
+  }, []);
 
   // Compute KPI summaries
   const totals = useMemo(() => {
@@ -74,7 +100,7 @@ export default function AmortizationChart({ schedule, translations: t }: Amortiz
       chartInstance.current = null;
     }
 
-    const isDark = document.documentElement.classList.contains("dark");
+    const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
     const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)";
     const textColor = isDark ? "#94a3b8" : "#475569";
 
@@ -314,33 +340,33 @@ export default function AmortizationChart({ schedule, translations: t }: Amortiz
         chartInstance.current = null;
       }
     };
-  }, [schedule, view, t]);
+  }, [schedule, view, t, themeMode]);
 
   return (
-    <div className="mt-8 rounded-xl border border-gray-200 bg-gray-50/50 p-6 dark:border-gray-700 dark:bg-gray-800/60" data-testid="amortization-chart-container">
+    <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800/80 dark:bg-slate-900/90 p-6 shadow-sm" data-testid="amortization-chart-container">
       {/* KPI Cards */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-lg bg-blue-500/10 p-3 text-center border border-blue-500/20">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">{t.totalPrincipal}</p>
-          <p className="text-lg font-bold text-blue-700 dark:text-blue-300" data-testid="kpi-total-principal">
+        <div className="rounded-xl bg-blue-50/70 dark:bg-blue-950/30 p-4 text-center border border-blue-200/70 dark:border-blue-900/40 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">{t.totalPrincipal}</p>
+          <p className="mt-1 text-lg sm:text-xl font-extrabold text-blue-700 dark:text-blue-300" data-testid="kpi-total-principal">
             €{totals.principal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
-        <div className="rounded-lg bg-amber-500/10 p-3 text-center border border-amber-500/20">
-          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">{t.totalInterest}</p>
-          <p className="text-lg font-bold text-amber-700 dark:text-amber-300" data-testid="kpi-total-interest">
+        <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/30 p-4 text-center border border-amber-200/70 dark:border-amber-900/40 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">{t.totalInterest}</p>
+          <p className="mt-1 text-lg sm:text-xl font-extrabold text-amber-700 dark:text-amber-300" data-testid="kpi-total-interest">
             €{totals.interest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
-        <div className="rounded-lg bg-emerald-500/10 p-3 text-center border border-emerald-500/20">
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{t.totalInsurance}</p>
-          <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300" data-testid="kpi-total-insurance">
+        <div className="rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 p-4 text-center border border-emerald-200/70 dark:border-emerald-900/40 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{t.totalInsurance}</p>
+          <p className="mt-1 text-lg sm:text-xl font-extrabold text-emerald-700 dark:text-emerald-300" data-testid="kpi-total-insurance">
             €{totals.costs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
-        <div className="rounded-lg bg-purple-500/10 p-3 text-center border border-purple-500/20">
-          <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">{t.totalCost}</p>
-          <p className="text-lg font-bold text-purple-700 dark:text-purple-300" data-testid="kpi-total-cost">
+        <div className="rounded-xl bg-purple-50/70 dark:bg-purple-950/30 p-4 text-center border border-purple-200/70 dark:border-purple-900/40 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">{t.totalCost}</p>
+          <p className="mt-1 text-lg sm:text-xl font-extrabold text-purple-700 dark:text-purple-300" data-testid="kpi-total-cost">
             €{totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
@@ -348,16 +374,16 @@ export default function AmortizationChart({ schedule, translations: t }: Amortiz
 
       {/* Chart Header & View Switcher */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">{t.title}</h3>
-        <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1 text-xs dark:border-gray-600 dark:bg-gray-700">
+        <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">{t.title}</h3>
+        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100/90 p-1 text-xs dark:border-slate-700 dark:bg-slate-800">
           <button
             type="button"
             data-testid="chart-tab-annual"
             onClick={() => setView("annual")}
-            className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+            className={`rounded-lg px-3 py-1.5 font-medium transition-all ${
               view === "annual"
-                ? "bg-blue-600 text-white shadow"
-                : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
             {t.annualBreakdown}
@@ -366,10 +392,10 @@ export default function AmortizationChart({ schedule, translations: t }: Amortiz
             type="button"
             data-testid="chart-tab-cumulative"
             onClick={() => setView("cumulative")}
-            className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+            className={`rounded-lg px-3 py-1.5 font-medium transition-all ${
               view === "cumulative"
-                ? "bg-blue-600 text-white shadow"
-                : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
             {t.cumulativeTotals}
@@ -378,10 +404,10 @@ export default function AmortizationChart({ schedule, translations: t }: Amortiz
             type="button"
             data-testid="chart-tab-monthly"
             onClick={() => setView("monthly")}
-            className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+            className={`rounded-lg px-3 py-1.5 font-medium transition-all ${
               view === "monthly"
-                ? "bg-blue-600 text-white shadow"
-                : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
             {t.monthlyBreakdown}

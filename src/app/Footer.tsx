@@ -6,48 +6,60 @@ import Link from 'next/link';
 import { externalLinks } from './links';
 
 export default function Footer() {
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    } else if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+      document.documentElement.classList.toggle('dark', true);
     }
-    return 'light';
-  });
+  }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newTheme } }));
+    }
   };
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
-
   return (
-    <footer className="bg-gray-200 dark:bg-gray-800 py-4 mt-8">
-      <div className="container mx-auto px-4 text-center text-gray-600 dark:text-gray-300">
-        <div className="mb-4">
+    <footer className="mt-12 border-t border-slate-200/80 bg-white/80 py-8 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/80 text-sm">
+      <div className="container mx-auto px-4 flex flex-col items-center justify-center gap-4 text-center text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           {externalLinks.map((link, index) => (
-            <span key={link.href}>
-              <Link href={link.href} className="mx-2 hover:text-gray-800 dark:hover:text-gray-100">
+            <span key={link.href} className="inline-flex items-center">
+              <Link
+                href={link.href}
+                className="font-medium text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors"
+              >
                 {link.label}
               </Link>
-              {index < externalLinks.length - 1 && <span>|</span>}
+              {index < externalLinks.length - 1 && <span className="ml-2 text-slate-300 dark:text-slate-700">&bull;</span>}
             </span>
           ))}
         </div>
 
         <button
           onClick={toggleTheme}
-          className="py-2 px-4 bg-gray-300 dark:bg-gray-700 rounded hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+          data-testid="theme-toggle"
+          suppressHydrationWarning
+          className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-4 py-2 font-medium text-slate-700 shadow-xs hover:bg-slate-200 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white transition-all cursor-pointer"
         >
-          Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
+          <span>{theme === 'light' ? '🌙' : '☀️'}</span>
+          <span>Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode</span>
         </button>
 
-        <div className="mt-4">
-          © {new Date().getFullYear()} LouisVolant.com. All rights reserved.
+        <div className="text-xs text-slate-400 dark:text-slate-500">
+          &copy; {new Date().getFullYear()} LouisVolant.com. All rights reserved.
         </div>
       </div>
     </footer>

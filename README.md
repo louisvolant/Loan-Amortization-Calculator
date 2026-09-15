@@ -17,10 +17,12 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
   - **KPI Summary Cards**: Real-time totals for principal, interest, insurance, and total cost of the loan.
 - **Smart Schedule Pagination**: Convenient pagination controls for long loan schedules (e.g., 360-month mortgages) with customizable page size (12, 24, 60, 120, or all payments), navigation buttons (First, Prev, Next, Last), and item range indicators.
 - **Comprehensive Multi-Language Localization**: Full localization across 7 languages (**English**, **Français**, **Italiano**, **Español**, **Deutsch**, **Українська**, **Português**) with persistent language selection saved in local storage across browser sessions.
+- **Modern UI / UX Redesign**: Clean glassmorphism navigation header, elevated card container with rounded-3xl borders, refined contrast palettes, intuitive badges, and right-aligned tabular numbers.
+- **Dark & Light Mode Support**: Seamless toggle between light mode and high-contrast dark mode with automatic local storage persistence and dynamic live-recoloring of Chart.js gridlines and labels.
+- **Playwright E2E Test Suite**: Full end-to-end test coverage covering calculations, real-time validations, loan types (amortizing, interest-only, ARM), pagination, Chart.js interactions, 7-language localization, and theme toggling.
 - **Optional Table Row Input**: Rebuild schedules by entering up to three rows from an existing amortization table.
 - **Persistent State**: Form inputs, loan configurations, and calculated schedules are saved to local storage, restoring the last state on page reload.
-- **Responsive Design**: Mobile-friendly interface with a colorful gradient theme using Tailwind CSS.
-- **Dark Mode**: Toggle between light and dark themes, with preferences saved in local storage.
+- **Responsive Design**: Mobile-friendly interface optimized for phones, tablets, and desktop displays.
 - **Extensible**: Built with modern Next.js and React, ready for additional features like CSV export or chart visualization.
 
 ## Usage
@@ -55,6 +57,14 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
 ### Project Structure
 
 mortgage-amortization-calculator/
+├── e2e/                        # Playwright end-to-end test suite
+│   ├── smoke.spec.ts           # Smoke & basic calculation tests
+│   ├── validation.spec.ts      # Real-time field validation tests
+│   ├── loan-types.spec.ts      # Interest-only & ARM adjustable rate tests
+│   ├── pagination.spec.ts      # Schedule pagination tests
+│   ├── chart.spec.ts           # Chart.js visualization & view tab tests
+│   ├── i18n.spec.ts            # 7-language localization & persistence tests
+│   └── theme.spec.ts           # Dark / Light mode & persistence tests
 ├── public/                     # Static assets (e.g., icon_calculator.png, icon_calculator.svg)
 ├── src/
 │   ├── app/                    # Next.js app router
@@ -65,8 +75,10 @@ mortgage-amortization-calculator/
 │   │   ├── links.ts            # External links for footer
 │   │   └── sitemap.ts          # Sitemap generator
 │   ├── components/             # React components
-│   │   └── LoanAmortizationCalculator.tsx # Main calculator component
-│   └── utils/                  # TypeScript interfaces and localization
+│   │   ├── LoanAmortizationCalculator.tsx # Main calculator component
+│   │   └── AmortizationChart.tsx          # Chart.js visualizer & KPI summary cards
+│   └── utils/                  # TypeScript interfaces, localization & validation
+├── playwright.config.ts        # Playwright test configuration
 ├── next.config.ts              # Next.js configuration (static export)
 ├── package.json                # Project dependencies and scripts
 ├── tsconfig.json               # TypeScript configuration
@@ -78,20 +90,34 @@ mortgage-amortization-calculator/
 
 - Next.js (16.x): React framework configured for static export (`output: "export"`).
 - React.js (19.x): Component-based UI library.
-- Tailwind CSS (4.x): Utility-first CSS framework for modern styling.
+- Tailwind CSS (4.x): Utility-first CSS framework with modernized color palette and dark mode.
+- Chart.js (4.x): Dynamic canvas charts with multi-view breakdowns and KPI indicators.
+- Playwright: End-to-end browser test automation suite.
 - TypeScript: Static typing for JavaScript.
 - Cloudflare Workers / Assets: Fast and globally distributed hosting via Wrangler.
 - Local Storage: Browser API for persistent state.
 - Geist Font: Modern typography via Next.js font optimization.
 
 
-## Development & Deployment
+## Development & Testing
 
 ### Local Development
 
-Run the development server with Turbopack:
+Run the development server:
 ```bash
 npm run dev
+```
+
+### Running End-to-End Tests (Playwright)
+
+Run the full automated test suite:
+```bash
+npm run test:e2e
+```
+
+Run tests with Playwright interactive UI mode:
+```bash
+npx playwright test --ui
 ```
 
 ### Building for Production
