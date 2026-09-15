@@ -7,11 +7,11 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
 ## Features
 
 - **Loan Amortization Calculation**: Calculate a full amortization schedule based on loan amount, annual interest rate, and loan term.
+- **Real-Time Input Validation**: Immediate validation as you type with accessible inline error alerts, red boundary highlights, and localized guidance in English, Spanish, and French.
 - **Optional Table Row Input**: Rebuild schedules by entering up to three rows from an existing amortization table.
 - **Persistent State**: Form inputs and calculated schedules are saved to local storage, restoring the last state on page reload.
 - **Responsive Design**: Mobile-friendly interface with a colorful gradient theme using Tailwind CSS.
 - **Dark Mode**: Toggle between light and dark themes, with preferences saved in local storage.
-- **Error Handling**: Validates inputs and displays clear error messages for invalid data.
 - **Extensible**: Built with modern Next.js and React, ready for additional features like CSV export or chart visualization.
 
 ## Usage

@@ -35,6 +35,18 @@ export interface Translations {
     amortizationScheduleTitle: string;
     downloadButton: string;
     insuranceRateLabel: string;
+    validation: {
+      loanAmountRequired: string;
+      loanAmountPositive: string;
+      loanAmountMax: string;
+      interestRateRequired: string;
+      interestRateRange: string;
+      loanTermRequired: string;
+      loanTermPositiveInt: string;
+      loanTermMax: string;
+      insuranceRateRange: string;
+      fixErrorsToCalculate: string;
+    };
     tableHeaders: {
       rank: string;
       dueDate: string;

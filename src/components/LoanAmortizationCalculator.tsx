@@ -1,9 +1,10 @@
 // src/components/LoanAmortizationCalculator.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { translations } from "../utils/translations";
 import { AmortizationRow, TableRowInput, Language } from "../utils/globals";
+import { validateLoanInputs } from "../utils/validation";
 
 export default function LoanAmortizationCalculator() {
   // State declarations
@@ -25,6 +26,22 @@ export default function LoanAmortizationCalculator() {
   const [amortizationSchedule, setAmortizationSchedule] = useState<AmortizationRow[]>([]);
   const [error, setError] = useState("");
   const [language, setLanguage] = useState<Language>("en");
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+
+  const t = translations[language];
+
+  // Real-time input validation errors
+  const errors = useMemo(() => {
+    return validateLoanInputs(
+      {
+        loanAmount,
+        interestRate,
+        loanTermMonths,
+        insuranceRate,
+      },
+      t.validation
+    );
+  }, [loanAmount, interestRate, loanTermMonths, insuranceRate, t.validation]);
 
   // Load state from localStorage
   useEffect(() => {
@@ -102,32 +119,25 @@ export default function LoanAmortizationCalculator() {
   // Calculate amortization schedule
   const calculateAmortization = () => {
     setError("");
+    setTouched({
+      loanAmount: true,
+      interestRate: true,
+      loanTermMonths: true,
+      insuranceRate: true,
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setError(t.validation.fixErrorsToCalculate);
+      return;
+    }
+
     const initialLoanAmount = parseFloat(loanAmount);
     const annualInterestRate = parseFloat(interestRate);
     const totalLoanTermMonths = parseInt(loanTermMonths);
-    const annualInsuranceRate = parseFloat(insuranceRate); // Get the insurance rate
+    const annualInsuranceRate = insuranceRate ? parseFloat(insuranceRate) : 0; // Get the insurance rate
 
     const monthlyInterestRate = annualInterestRate / 100 / 12;
     const monthlyInsuranceRate = annualInsuranceRate / 100 / 12; // Monthly insurance rate
-
-    // Basic input validation
-    if (
-      isNaN(initialLoanAmount) ||
-      initialLoanAmount <= 0 ||
-      isNaN(annualInterestRate) ||
-      annualInterestRate <= 0 ||
-      isNaN(totalLoanTermMonths) ||
-      totalLoanTermMonths <= 0
-    ) {
-      setError(
-        language === "en"
-          ? "Please provide valid loan amount, annual interest rate, and loan term (in months)."
-          : language === "es"
-          ? "Por favor, proporcione un monto de préstamo válido, tasa de interés anual y plazo del préstamo (en meses)."
-          : "Veuillez fournir un montant de prêt valide, un taux d'intérêt annuel et une durée de prêt (en mois)."
-      );
-      return;
-    }
 
     // Pre-calculate what the "fixed principal portion" would be if it were a linear amortization.
     // This is a common pattern in French loans where the principal repayment increases slightly
@@ -355,8 +365,6 @@ export default function LoanAmortizationCalculator() {
     document.body.removeChild(link);
   };
 
-  const t = translations[language];
-
   return (
     <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
       {/* Header and Language Selector */}
@@ -374,48 +382,120 @@ export default function LoanAmortizationCalculator() {
       </div>
 
       {/* Loan Details Form */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.loanAmountLabel}</label>
+          <label htmlFor="loanAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.loanAmountLabel}
+          </label>
           <input
+            id="loanAmount"
+            data-testid="input-loan-amount"
             type="number"
             value={loanAmount}
-            onChange={(e) => setLoanAmount(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
+            onChange={(e) => {
+              setLoanAmount(e.target.value);
+              setTouched((prev) => ({ ...prev, loanAmount: true }));
+            }}
+            onBlur={() => setTouched((prev) => ({ ...prev, loanAmount: true }))}
+            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+              touched.loanAmount && errors.loanAmount
+                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+            }`}
             placeholder={t.placeholders.loanAmount}
+            aria-invalid={touched.loanAmount && !!errors.loanAmount}
           />
+          {touched.loanAmount && errors.loanAmount && (
+            <p className="mt-1 text-xs text-red-500 font-medium" role="alert" data-testid="error-loan-amount">
+              {errors.loanAmount}
+            </p>
+          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.interestRateLabel}</label>
+          <label htmlFor="interestRate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.interestRateLabel}
+          </label>
           <input
+            id="interestRate"
+            data-testid="input-interest-rate"
             type="number"
             step="0.01"
             value={interestRate}
-            onChange={(e) => setInterestRate(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
+            onChange={(e) => {
+              setInterestRate(e.target.value);
+              setTouched((prev) => ({ ...prev, interestRate: true }));
+            }}
+            onBlur={() => setTouched((prev) => ({ ...prev, interestRate: true }))}
+            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+              touched.interestRate && errors.interestRate
+                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+            }`}
             placeholder={t.placeholders.interestRate}
+            aria-invalid={touched.interestRate && !!errors.interestRate}
           />
+          {touched.interestRate && errors.interestRate && (
+            <p className="mt-1 text-xs text-red-500 font-medium" role="alert" data-testid="error-interest-rate">
+              {errors.interestRate}
+            </p>
+          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.loanTermLabel}</label>
+          <label htmlFor="loanTermMonths" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.loanTermLabel}
+          </label>
           <input
+            id="loanTermMonths"
+            data-testid="input-loan-term"
             type="number"
             value={loanTermMonths}
-            onChange={(e) => setLoanTermMonths(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
+            onChange={(e) => {
+              setLoanTermMonths(e.target.value);
+              setTouched((prev) => ({ ...prev, loanTermMonths: true }));
+            }}
+            onBlur={() => setTouched((prev) => ({ ...prev, loanTermMonths: true }))}
+            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+              touched.loanTermMonths && errors.loanTermMonths
+                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+            }`}
             placeholder={t.placeholders.loanTerm}
+            aria-invalid={touched.loanTermMonths && !!errors.loanTermMonths}
           />
+          {touched.loanTermMonths && errors.loanTermMonths && (
+            <p className="mt-1 text-xs text-red-500 font-medium" role="alert" data-testid="error-loan-term">
+              {errors.loanTermMonths}
+            </p>
+          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t.insuranceRateLabel}</label>
+          <label htmlFor="insuranceRate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.insuranceRateLabel}
+          </label>
           <input
+            id="insuranceRate"
+            data-testid="input-insurance-rate"
             type="number"
             step="0.01"
             value={insuranceRate}
-            onChange={(e) => setInsuranceRate(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 min-w-[100px]"
+            onChange={(e) => {
+              setInsuranceRate(e.target.value);
+              setTouched((prev) => ({ ...prev, insuranceRate: true }));
+            }}
+            onBlur={() => setTouched((prev) => ({ ...prev, insuranceRate: true }))}
+            className={`mt-1 w-full rounded-md border bg-gray-50 p-3 text-base min-w-[100px] transition-colors dark:bg-gray-700 ${
+              touched.insuranceRate && errors.insuranceRate
+                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+            }`}
             placeholder={t.placeholders.insuranceRate}
+            aria-invalid={touched.insuranceRate && !!errors.insuranceRate}
           />
+          {touched.insuranceRate && errors.insuranceRate && (
+            <p className="mt-1 text-xs text-red-500 font-medium" role="alert" data-testid="error-insurance-rate">
+              {errors.insuranceRate}
+            </p>
+          )}
         </div>
       </div>
 
@@ -520,13 +600,18 @@ export default function LoanAmortizationCalculator() {
       {/* Calculate Button */}
       <button
         onClick={calculateAmortization}
-        className="w-full rounded-md bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
+        data-testid="calculate-button"
+        className="w-full rounded-md bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600 disabled:opacity-50"
       >
         {t.calculateButton}
       </button>
 
       {/* Error Message */}
-      {error && <p className="mt-4 text-center text-red-500">{error}</p>}
+      {error && (
+        <p className="mt-4 text-center text-red-500 font-medium" role="alert" data-testid="error-summary">
+          {error}
+        </p>
+      )}
 
       {/* Amortization Table */}
       {amortizationSchedule.length > 0 && (
