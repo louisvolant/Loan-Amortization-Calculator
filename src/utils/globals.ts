@@ -55,6 +55,16 @@ export interface Translations {
     calculateButton: string;
     amortizationScheduleTitle: string;
     downloadButton: string;
+    pagination: {
+      rowsPerPage: string;
+      all: string;
+      pageOf: string;
+      showing: string;
+      first: string;
+      previous: string;
+      next: string;
+      last: string;
+    };
     validation: {
       loanAmountRequired: string;
       loanAmountPositive: string;

@@ -31,8 +31,18 @@ export default function LoanAmortizationCalculator() {
   const [error, setError] = useState("");
   const [language, setLanguage] = useState<Language>("en");
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState<number | "all">(12);
 
   const t = translations[language];
+
+  // Pagination calculation
+  const totalRows = amortizationSchedule.length;
+  const totalPages = rowsPerPage === "all" ? 1 : Math.max(1, Math.ceil(totalRows / (rowsPerPage || 1)));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * (typeof rowsPerPage === "number" ? rowsPerPage : totalRows);
+  const endIndex = typeof rowsPerPage === "number" ? Math.min(startIndex + rowsPerPage, totalRows) : totalRows;
+  const displayedRows = amortizationSchedule.slice(startIndex, endIndex);
 
   // Real-time input validation errors
   const errors = useMemo(() => {
@@ -355,6 +365,7 @@ export default function LoanAmortizationCalculator() {
     }
 
     setAmortizationSchedule(fullSchedule);
+    setCurrentPage(1);
   };
 
   // Handle CSV download
@@ -812,7 +823,31 @@ export default function LoanAmortizationCalculator() {
       {/* Amortization Table */}
       {amortizationSchedule.length > 0 && (
         <div className="mt-8 overflow-x-auto">
-          <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">{t.amortizationScheduleTitle}</h3>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t.amortizationScheduleTitle}</h3>
+
+            {/* Rows per page selector */}
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <span>{t.pagination.rowsPerPage}</span>
+              <select
+                data-testid="select-rows-per-page"
+                value={rowsPerPage}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setRowsPerPage(val === "all" ? "all" : parseInt(val));
+                  setCurrentPage(1);
+                }}
+                className="rounded border border-gray-300 bg-white p-1 text-sm dark:border-gray-600 dark:bg-gray-700"
+              >
+                <option value="12">12</option>
+                <option value="24">24</option>
+                <option value="60">60</option>
+                <option value="120">120</option>
+                <option value="all">{t.pagination.all}</option>
+              </select>
+            </div>
+          </div>
+
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-blue-100 dark:bg-blue-900">
@@ -826,7 +861,7 @@ export default function LoanAmortizationCalculator() {
               </tr>
             </thead>
             <tbody>
-              {amortizationSchedule.map((row) => (
+              {displayedRows.map((row) => (
                 <tr key={row.rank} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="border-b p-2">{row.rank}</td>
                   <td className="border-b p-2">{row.dueDate}</td>
@@ -839,6 +874,67 @@ export default function LoanAmortizationCalculator() {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-700 dark:text-gray-300" data-testid="pagination-controls">
+            <div data-testid="pagination-info">
+              {t.pagination.showing
+                .replace("{start}", totalRows > 0 ? (startIndex + 1).toString() : "0")
+                .replace("{end}", endIndex.toString())
+                .replace("{total}", totalRows.toString())}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  data-testid="pagination-first"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={safeCurrentPage === 1}
+                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={t.pagination.first}
+                >
+                  &laquo;
+                </button>
+                <button
+                  type="button"
+                  data-testid="pagination-prev"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage === 1}
+                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={t.pagination.previous}
+                >
+                  &lsaquo;
+                </button>
+                <span className="px-2" data-testid="pagination-page-indicator">
+                  {t.pagination.pageOf
+                    .replace("{current}", safeCurrentPage.toString())
+                    .replace("{total}", totalPages.toString())}
+                </span>
+                <button
+                  type="button"
+                  data-testid="pagination-next"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage === totalPages}
+                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={t.pagination.next}
+                >
+                  &rsaquo;
+                </button>
+                <button
+                  type="button"
+                  data-testid="pagination-last"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={safeCurrentPage === totalPages}
+                  className="rounded px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={t.pagination.last}
+                >
+                  &raquo;
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleDownload}
             className="mt-4 rounded-md bg-green-500 px-4 py-2 text-white transition-colors hover:bg-green-600"

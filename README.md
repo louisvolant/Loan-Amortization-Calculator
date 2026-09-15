@@ -10,6 +10,7 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
 - **Loan Types Support**: Choose between standard amortizing loans and interest-only loans with customizable interest-only durations and automatic term re-amortization or balloon payoff at maturity.
 - **Variable / Adjustable Rates (ARM)**: Define scheduled interest rate adjustments at any month of the loan term, with automatic payment recalculation over remaining balances.
 - **Real-Time Input Validation**: Immediate validation as you type with accessible inline error alerts, red boundary highlights, and localized guidance in English, Spanish, and French.
+- **Smart Schedule Pagination**: Convenient pagination controls for long loan schedules (e.g., 360-month mortgages) with customizable page size (12, 24, 60, 120, or all payments), navigation buttons (First, Prev, Next, Last), and item range indicators.
 - **Optional Table Row Input**: Rebuild schedules by entering up to three rows from an existing amortization table.
 - **Persistent State**: Form inputs, loan configurations, and calculated schedules are saved to local storage, restoring the last state on page reload.
 - **Responsive Design**: Mobile-friendly interface with a colorful gradient theme using Tailwind CSS.
