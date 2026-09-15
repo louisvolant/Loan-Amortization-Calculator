@@ -55,6 +55,23 @@ export interface Translations {
     calculateButton: string;
     amortizationScheduleTitle: string;
     downloadButton: string;
+    charts: {
+      title: string;
+      annualBreakdown: string;
+      cumulativeTotals: string;
+      monthlyBreakdown: string;
+      principal: string;
+      interest: string;
+      remainingBalance: string;
+      cumulativePrincipal: string;
+      cumulativeInterest: string;
+      totalPrincipal: string;
+      totalInterest: string;
+      totalCost: string;
+      totalInsurance: string;
+      year: string;
+      month: string;
+    };
     pagination: {
       rowsPerPage: string;
       all: string;

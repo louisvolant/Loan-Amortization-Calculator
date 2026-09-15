@@ -5,6 +5,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { translations } from "../utils/translations";
 import { AmortizationRow, TableRowInput, Language, LoanType, RateType, RateAdjustment } from "../utils/globals";
 import { validateLoanInputs } from "../utils/validation";
+import AmortizationChart from "./AmortizationChart";
 
 export default function LoanAmortizationCalculator() {
   // State declarations
@@ -818,6 +819,11 @@ export default function LoanAmortizationCalculator() {
         <p className="mt-4 text-center text-red-500 font-medium" role="alert" data-testid="error-summary">
           {error}
         </p>
+      )}
+
+      {/* Visual Chart */}
+      {amortizationSchedule.length > 0 && (
+        <AmortizationChart schedule={amortizationSchedule} translations={t.charts} />
       )}
 
       {/* Amortization Table */}
