@@ -10,6 +10,10 @@ export interface ValidationMessages {
   loanTermPositiveInt: string;
   loanTermMax: string;
   insuranceRateRange: string;
+  interestOnlyMonthsRequired: string;
+  interestOnlyMonthsRange: string;
+  rateAdjustmentStartMonthRange: string;
+  rateAdjustmentRateRange: string;
   fixErrorsToCalculate: string;
 }
 
@@ -18,6 +22,8 @@ export interface FormValidationErrors {
   interestRate?: string;
   loanTermMonths?: string;
   insuranceRate?: string;
+  interestOnlyMonths?: string;
+  rateAdjustments?: Record<number, { startMonth?: string; rate?: string }>;
   tableRows?: Record<number, Record<string, string>>;
 }
 
@@ -27,6 +33,10 @@ export function validateLoanInputs(
     interestRate: string;
     loanTermMonths: string;
     insuranceRate: string;
+    loanType?: "amortizing" | "interest_only";
+    interestOnlyMonths?: string;
+    rateType?: "fixed" | "variable";
+    rateAdjustments?: { startMonth: string; rate: string }[];
   },
   messages: ValidationMessages
 ): FormValidationErrors {
@@ -58,10 +68,10 @@ export function validateLoanInputs(
 
   // Validate loan term in months
   const trimmedTerm = inputs.loanTermMonths.trim();
+  const numTerm = Number(trimmedTerm);
   if (!trimmedTerm) {
     errors.loanTermMonths = messages.loanTermRequired;
   } else {
-    const numTerm = Number(trimmedTerm);
     if (isNaN(numTerm) || !Number.isInteger(numTerm) || numTerm <= 0) {
       errors.loanTermMonths = messages.loanTermPositiveInt;
     } else if (numTerm > 1200) {
@@ -76,6 +86,48 @@ export function validateLoanInputs(
     if (isNaN(numInsurance) || numInsurance < 0 || numInsurance > 100) {
       errors.insuranceRate = messages.insuranceRateRange;
     }
+  }
+
+  // Validate interest-only period if loan type is interest_only
+  if (inputs.loanType === "interest_only") {
+    const trimmedIOMonths = (inputs.interestOnlyMonths || "").trim();
+    if (!trimmedIOMonths) {
+      errors.interestOnlyMonths = messages.interestOnlyMonthsRequired;
+    } else {
+      const numIO = Number(trimmedIOMonths);
+      const maxTerm = !isNaN(numTerm) && numTerm > 0 ? numTerm : 1200;
+      if (isNaN(numIO) || !Number.isInteger(numIO) || numIO <= 0 || numIO > maxTerm) {
+        errors.interestOnlyMonths = messages.interestOnlyMonthsRange;
+      }
+    }
+  }
+
+  // Validate variable rate adjustments
+  if (inputs.rateType === "variable" && inputs.rateAdjustments) {
+    inputs.rateAdjustments.forEach((adj, idx) => {
+      const adjErrors: { startMonth?: string; rate?: string } = {};
+      const startMonthNum = Number(adj.startMonth);
+      const maxTerm = !isNaN(numTerm) && numTerm > 0 ? numTerm : 1200;
+      if (
+        !adj.startMonth.trim() ||
+        isNaN(startMonthNum) ||
+        !Number.isInteger(startMonthNum) ||
+        startMonthNum < 2 ||
+        startMonthNum > maxTerm
+      ) {
+        adjErrors.startMonth = messages.rateAdjustmentStartMonthRange;
+      }
+
+      const rateNum = Number(adj.rate);
+      if (!adj.rate.trim() || isNaN(rateNum) || rateNum < 0 || rateNum > 100) {
+        adjErrors.rate = messages.rateAdjustmentRateRange;
+      }
+
+      if (adjErrors.startMonth || adjErrors.rate) {
+        if (!errors.rateAdjustments) errors.rateAdjustments = {};
+        errors.rateAdjustments[idx] = adjErrors;
+      }
+    });
   }
 
   return errors;

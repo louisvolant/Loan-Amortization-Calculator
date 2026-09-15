@@ -21,6 +21,13 @@ export interface TableRowInput {
 }
 
 export type Language = "en" | "es" | "fr";
+export type LoanType = "amortizing" | "interest_only";
+export type RateType = "fixed" | "variable";
+
+export interface RateAdjustment {
+  startMonth: string;
+  rate: string;
+}
 
 export interface Translations {
   [key: string]: {
@@ -28,13 +35,26 @@ export interface Translations {
     loanAmountLabel: string;
     interestRateLabel: string;
     loanTermLabel: string;
+    insuranceRateLabel: string;
+    loanTypeLabel: string;
+    loanTypeAmortizing: string;
+    loanTypeInterestOnly: string;
+    interestOnlyMonthsLabel: string;
+    rateTypeLabel: string;
+    rateTypeFixed: string;
+    rateTypeVariable: string;
+    variableRateTitle: string;
+    addRateAdjustmentButton: string;
+    removeRateAdjustmentButton: string;
+    startMonthLabel: string;
+    adjustedRateLabel: string;
+    balloonPaymentLabel: string;
     optionalRowsTitle: string;
     addRowButton: string;
     removeRowButton: string;
     calculateButton: string;
     amortizationScheduleTitle: string;
     downloadButton: string;
-    insuranceRateLabel: string;
     validation: {
       loanAmountRequired: string;
       loanAmountPositive: string;
@@ -45,6 +65,10 @@ export interface Translations {
       loanTermPositiveInt: string;
       loanTermMax: string;
       insuranceRateRange: string;
+      interestOnlyMonthsRequired: string;
+      interestOnlyMonthsRange: string;
+      rateAdjustmentStartMonthRange: string;
+      rateAdjustmentRateRange: string;
       fixErrorsToCalculate: string;
     };
     tableHeaders: {

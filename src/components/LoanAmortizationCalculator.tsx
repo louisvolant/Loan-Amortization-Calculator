@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { translations } from "../utils/translations";
-import { AmortizationRow, TableRowInput, Language } from "../utils/globals";
+import { AmortizationRow, TableRowInput, Language, LoanType, RateType, RateAdjustment } from "../utils/globals";
 import { validateLoanInputs } from "../utils/validation";
 
 export default function LoanAmortizationCalculator() {
@@ -12,6 +12,10 @@ export default function LoanAmortizationCalculator() {
   const [interestRate, setInterestRate] = useState("");
   const [loanTermMonths, setLoanTermMonths] = useState("");
   const [insuranceRate, setInsuranceRate] = useState("");
+  const [loanType, setLoanType] = useState<LoanType>("amortizing");
+  const [interestOnlyMonths, setInterestOnlyMonths] = useState("24");
+  const [rateType, setRateType] = useState<RateType>("fixed");
+  const [rateAdjustments, setRateAdjustments] = useState<RateAdjustment[]>([]);
   const [tableRows, setTableRows] = useState<TableRowInput[]>([
     {
       rank: "",
@@ -38,10 +42,14 @@ export default function LoanAmortizationCalculator() {
         interestRate,
         loanTermMonths,
         insuranceRate,
+        loanType,
+        interestOnlyMonths,
+        rateType,
+        rateAdjustments,
       },
       t.validation
     );
-  }, [loanAmount, interestRate, loanTermMonths, insuranceRate, t.validation]);
+  }, [loanAmount, interestRate, loanTermMonths, insuranceRate, loanType, interestOnlyMonths, rateType, rateAdjustments, t.validation]);
 
   // Load state from localStorage
   useEffect(() => {
@@ -52,7 +60,11 @@ export default function LoanAmortizationCalculator() {
         setLoanAmount(parsedState.loanAmount || "");
         setInterestRate(parsedState.interestRate || "");
         setLoanTermMonths(parsedState.loanTermMonths || "");
-        setInsuranceRate(parsedState.insuranceRate || ""); // Load insurance rate
+        setInsuranceRate(parsedState.insuranceRate || "");
+        setLoanType(parsedState.loanType || "amortizing");
+        setInterestOnlyMonths(parsedState.interestOnlyMonths || "24");
+        setRateType(parsedState.rateType || "fixed");
+        setRateAdjustments(parsedState.rateAdjustments || []);
         setTableRows(
           parsedState.tableRows || [
             // ...
@@ -73,7 +85,11 @@ export default function LoanAmortizationCalculator() {
         loanAmount,
         interestRate,
         loanTermMonths,
-        insuranceRate, // Save insurance rate
+        insuranceRate,
+        loanType,
+        interestOnlyMonths,
+        rateType,
+        rateAdjustments,
         tableRows,
         amortizationSchedule,
         language,
@@ -82,7 +98,36 @@ export default function LoanAmortizationCalculator() {
     } catch (error) {
       console.error("Error saving to localStorage:", error);
     }
-  }, [loanAmount, interestRate, loanTermMonths, insuranceRate, tableRows, amortizationSchedule, language]);
+  }, [
+    loanAmount,
+    interestRate,
+    loanTermMonths,
+    insuranceRate,
+    loanType,
+    interestOnlyMonths,
+    rateType,
+    rateAdjustments,
+    tableRows,
+    amortizationSchedule,
+    language,
+  ]);
+
+  // Rate adjustments management
+  const addRateAdjustment = () => {
+    if (rateAdjustments.length < 5) {
+      setRateAdjustments([...rateAdjustments, { startMonth: "", rate: "" }]);
+    }
+  };
+
+  const removeRateAdjustment = (index: number) => {
+    setRateAdjustments(rateAdjustments.filter((_, i) => i !== index));
+  };
+
+  const updateRateAdjustment = (index: number, field: keyof RateAdjustment, value: string) => {
+    const updated = [...rateAdjustments];
+    updated[index][field] = value;
+    setRateAdjustments(updated);
+  };
 
   // Add a new table row
   const addTableRow = () => {
@@ -124,6 +169,7 @@ export default function LoanAmortizationCalculator() {
       interestRate: true,
       loanTermMonths: true,
       insuranceRate: true,
+      interestOnlyMonths: true,
     });
 
     if (Object.keys(errors).length > 0) {
@@ -132,22 +178,25 @@ export default function LoanAmortizationCalculator() {
     }
 
     const initialLoanAmount = parseFloat(loanAmount);
-    const annualInterestRate = parseFloat(interestRate);
+    const baseInterestRate = parseFloat(interestRate);
     const totalLoanTermMonths = parseInt(loanTermMonths);
-    const annualInsuranceRate = insuranceRate ? parseFloat(insuranceRate) : 0; // Get the insurance rate
+    const annualInsuranceRate = insuranceRate ? parseFloat(insuranceRate) : 0;
+    const monthlyInsuranceRate = annualInsuranceRate / 100 / 12;
 
-    const monthlyInterestRate = annualInterestRate / 100 / 12;
-    const monthlyInsuranceRate = annualInsuranceRate / 100 / 12; // Monthly insurance rate
+    const ioMonths = loanType === "interest_only" ? parseInt(interestOnlyMonths) : 0;
 
-    // Pre-calculate what the "fixed principal portion" would be if it were a linear amortization.
-    // This is a common pattern in French loans where the principal repayment increases slightly
-    // to keep the total payment relatively stable or decreasing.
-    // However, given your PDF shows decreasing total payment, let's assume
-    // a fixed or increasing principal part that leads to a decreasing total payment.
-    // A simpler model is to assume the *calculated* Principal portion will lead to a specific remaining balance.
-    // We'll iterate and calculate month by month.
+    // Sort variable rate adjustments by start month
+    const validAdjustments =
+      rateType === "variable"
+        ? [...rateAdjustments]
+            .filter((adj) => adj.startMonth && adj.rate && !isNaN(parseInt(adj.startMonth)) && !isNaN(parseFloat(adj.rate)))
+            .sort((a, b) => parseInt(a.startMonth) - parseInt(b.startMonth))
+        : [];
+
     const fullSchedule: AmortizationRow[] = [];
     let currentBalance = initialLoanAmount;
+    let currentAnnualRate = baseInterestRate;
+    let currentMonthlyPayment = 0;
     let lastProvidedRank = 0;
     let lastProvidedDueDate: Date | null = null;
 
@@ -167,36 +216,56 @@ export default function LoanAmortizationCalculator() {
       )
       .sort((a, b) => parseInt(a.rank) - parseInt(b.rank));
 
-    // Determine initial payment based on the first period of the original loan
-    // This assumes a standard annuity loan for the principal and interest part
-    // if no optional rows are provided. If optional rows are provided, they override.
-    let currentMonthlyPayment =
-      initialLoanAmount * (monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -totalLoanTermMonths)));
-    if (!isFinite(currentMonthlyPayment)) {
-      // Handle cases where monthlyInterestRate is 0 or totalLoanTermMonths is problematic
-      // For example, if monthlyInterestRate is 0, then principal payment should be loanAmount / totalLoanTermMonths
-      if (monthlyInterestRate === 0 && totalLoanTermMonths > 0) {
-        currentMonthlyPayment = initialLoanAmount / totalLoanTermMonths;
+    // Calculate initial monthly payment for amortizing loan
+    const initialMonthlyRate = baseInterestRate / 100 / 12;
+    const initialAmortizingTerm = loanType === "interest_only" ? totalLoanTermMonths - ioMonths : totalLoanTermMonths;
+
+    if (initialAmortizingTerm > 0) {
+      if (initialMonthlyRate === 0) {
+        currentMonthlyPayment = initialLoanAmount / initialAmortizingTerm;
       } else {
-        // Fallback or error for other problematic cases
-        setError("Error: Cannot calculate initial monthly payment. Check interest rate and loan term.");
-        return;
+        const denom = 1 - Math.pow(1 + initialMonthlyRate, -initialAmortizingTerm);
+        currentMonthlyPayment = denom === 0 ? 0 : initialLoanAmount * (initialMonthlyRate / denom);
       }
     }
 
     // Iterate through each possible rank up to the total loan term
     for (let i = 1; i <= totalLoanTermMonths; i++) {
       const defaultDueDate = new Date();
-      defaultDueDate.setDate(5); // Assuming payments are due on the 5th based on your PDF
+      defaultDueDate.setDate(5);
       defaultDueDate.setMonth(defaultDueDate.getMonth() + i - 1);
 
-      let rankToPush: AmortizationRow;
+      // Check if a rate adjustment starts at this month
+      const matchingAdj = validAdjustments.find((adj) => parseInt(adj.startMonth) === i);
+      let rateChangedThisMonth = false;
+      if (matchingAdj) {
+        currentAnnualRate = parseFloat(matchingAdj.rate);
+        rateChangedThisMonth = true;
+      }
 
-      // Check if this rank is present in the provided table rows
+      const activeMonthlyInterestRate = currentAnnualRate / 100 / 12;
+      const isInterestOnlyPeriod = loanType === "interest_only" && i <= ioMonths;
+      const justExitedIO = loanType === "interest_only" && i === ioMonths + 1;
+
+      // Recalculate monthly amortizing payment if:
+      // 1. Just exited interest-only period
+      // 2. Rate changed during an amortizing period
+      if ((justExitedIO || (rateChangedThisMonth && !isInterestOnlyPeriod)) && currentBalance > 0) {
+        const remainingTerm = totalLoanTermMonths - i + 1;
+        if (remainingTerm > 0) {
+          if (activeMonthlyInterestRate === 0) {
+            currentMonthlyPayment = currentBalance / remainingTerm;
+          } else {
+            const denom = 1 - Math.pow(1 + activeMonthlyInterestRate, -remainingTerm);
+            currentMonthlyPayment = denom === 0 ? 0 : currentBalance * (activeMonthlyInterestRate / denom);
+          }
+        }
+      }
+
+      let rankToPush: AmortizationRow;
       const providedRow = filledTableRows.find((row) => parseInt(row.rank) === i);
 
       if (providedRow) {
-        // Use the provided values for this rank
         const providedBalance = parseFloat(providedRow.remainingBalance);
         const providedPayment = parseFloat(providedRow.payment);
         const providedPrincipal = parseFloat(providedRow.principal);
@@ -213,82 +282,59 @@ export default function LoanAmortizationCalculator() {
           remainingBalance: providedBalance,
         };
 
-        // Update current state for next calculations
         currentBalance = providedBalance;
         lastProvidedRank = i;
         lastProvidedDueDate = new Date(providedRow.dueDate);
 
-        // If this provided row clears the loan, stop.
         if (currentBalance <= 0) {
           fullSchedule.push(rankToPush);
           break;
         }
 
-        // If we just processed a provided row, we need to potentially recalculate
-        // the base principal/interest payment for the *remaining* loan duration
-        // if the remaining balance dramatically changed due to a lump sum.
-        // This is the tricky part: how does the bank re-amortize after a lump sum?
-        // Common scenarios:
-        // 1. Keep original payment, reduce term (requires re-calculating remaining term)
-        // 2. Keep original term, reduce payment (requires re-calculating new payment)
-        // Your PDF implies a fixed interest rate with changing principal/interest parts.
-        // Let's assume that after an override, the *remaining balance* is simply
-        // re-amortized over the *remaining original term* with a *recalculated fixed monthly principal+interest payment*.
-        // The additional costs will continue to be calculated based on the new currentBalance.
         const remainingPaymentsCount = totalLoanTermMonths - lastProvidedRank;
         if (remainingPaymentsCount > 0 && currentBalance > 0) {
-          const denominator = 1 - Math.pow(1 + monthlyInterestRate, -remainingPaymentsCount);
-          if (denominator === 0) {
-            // Handle division by zero for monthlyInterestRate = 0
+          if (activeMonthlyInterestRate === 0) {
             currentMonthlyPayment = currentBalance / remainingPaymentsCount;
           } else {
-            currentMonthlyPayment = currentBalance * (monthlyInterestRate / denominator);
+            const denominator = 1 - Math.pow(1 + activeMonthlyInterestRate, -remainingPaymentsCount);
+            currentMonthlyPayment = currentBalance * (activeMonthlyInterestRate / denominator);
           }
-        } else if (currentBalance <= 0) {
-          currentMonthlyPayment = 0; // Loan fully paid
         }
       } else {
-        // This is a calculated row
         if (currentBalance <= 0) {
-          break; // Loan is fully paid off
+          break;
         }
 
-        const interestPayment = currentBalance * monthlyInterestRate;
-
-        // Calculate additional costs based on the current remaining balance
-        // If no insurance rate is provided, or if the optional row specified 0, it stays 0.
+        const interestPayment = currentBalance * activeMonthlyInterestRate;
         const calculatedAdditionalCosts = isNaN(monthlyInsuranceRate)
           ? 0
           : currentBalance * monthlyInsuranceRate;
-        // If a last provided additional cost exists, use it if it seems consistent,
-        // otherwise rely on calculated. For simplicity, let's assume it's recalculated
-        // based on the currentBalance or fixed after an optional row sets it.
-        // For now, let's use the currentBalance * monthlyInsuranceRate as the standard.
-        // You can refine this if insurance has a truly fixed component or a different calculation.
 
-        // Determine the principal + interest portion of the payment for this period.
-        // This is the most ambiguous part given your loan's "decreasing payment" characteristic.
-        // If the loan has a fixed "amortized principal" portion, that's what's needed.
-        // If it's an annuity loan whose payments are recalculated on remaining term:
-        // We'll use the `currentMonthlyPayment` which was either the `originalLoanPrincipalInterestPayment`
-        // or the recalculated one after an optional row.
-        const principalInterestPayment = currentMonthlyPayment; // The base payment for P+I
+        let principalPayment = 0;
+        let totalPayment = 0;
 
-        let principalPayment = principalInterestPayment - interestPayment;
-
-        // Ensure principal payment does not over-amortize the loan
-        if (principalPayment > currentBalance) {
-          principalPayment = currentBalance;
+        if (isInterestOnlyPeriod) {
+          // If interest-only covers full term and this is the final month, balloon repayment of entire remaining balance
+          if (ioMonths >= totalLoanTermMonths && i === totalLoanTermMonths) {
+            principalPayment = currentBalance;
+            currentBalance = 0;
+            totalPayment = principalPayment + interestPayment + calculatedAdditionalCosts;
+          } else {
+            principalPayment = 0;
+            totalPayment = interestPayment + calculatedAdditionalCosts;
+          }
+        } else {
+          // Standard amortizing month
+          principalPayment = currentMonthlyPayment - interestPayment;
+          if (principalPayment > currentBalance || i === totalLoanTermMonths) {
+            principalPayment = currentBalance;
+          }
+          currentBalance -= principalPayment;
+          totalPayment = principalPayment + interestPayment + calculatedAdditionalCosts;
         }
 
-        // Update balance
-        currentBalance -= principalPayment;
-
-        // Calculate total payment for this row
-        const totalPayment = principalPayment + interestPayment + calculatedAdditionalCosts;
-
         const effectiveDueDate = new Date(lastProvidedDueDate || defaultDueDate);
-        effectiveDueDate.setMonth(effectiveDueDate.getMonth() + (i - lastProvidedRank)); // Adjust month correctly
+        effectiveDueDate.setMonth(effectiveDueDate.getMonth() + (i - lastProvidedRank));
 
         rankToPush = {
           rank: i,
@@ -303,9 +349,7 @@ export default function LoanAmortizationCalculator() {
 
       fullSchedule.push(rankToPush);
 
-      // If current balance reaches 0 or less, stop
       if (currentBalance <= 0 && providedRow === undefined) {
-        // Stop if paid off *by calculation*, not necessarily by provided row
         break;
       }
     }
@@ -354,7 +398,9 @@ export default function LoanAmortizationCalculator() {
 "${t.interestRateLabel}",${interestRate}
 "${t.loanTermLabel}",${loanTermMonths}
 "${t.insuranceRateLabel}",${insuranceRate}
-`; // Added insuranceRate to CSV export
+"${t.loanTypeLabel}",${loanType === "interest_only" ? `${t.loanTypeInterestOnly} (${interestOnlyMonths} mos)` : t.loanTypeAmortizing}
+"${t.rateTypeLabel}",${rateType === "variable" ? t.rateTypeVariable : t.rateTypeFixed}
+`;
 
     const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(inputsData + "\n" + headers + "\n" + rows.join("\n"));
     const link = document.createElement("a");
@@ -498,6 +544,156 @@ export default function LoanAmortizationCalculator() {
           )}
         </div>
       </div>
+
+      {/* Loan Type & Structure Selector */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="loanType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.loanTypeLabel}
+          </label>
+          <select
+            id="loanType"
+            data-testid="select-loan-type"
+            value={loanType}
+            onChange={(e) => setLoanType(e.target.value as LoanType)}
+            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+          >
+            <option value="amortizing">{t.loanTypeAmortizing}</option>
+            <option value="interest_only">{t.loanTypeInterestOnly}</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="rateType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.rateTypeLabel}
+          </label>
+          <select
+            id="rateType"
+            data-testid="select-rate-type"
+            value={rateType}
+            onChange={(e) => setRateType(e.target.value as RateType)}
+            className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-3 text-base focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+          >
+            <option value="fixed">{t.rateTypeFixed}</option>
+            <option value="variable">{t.rateTypeVariable}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Interest-Only Configuration */}
+      {loanType === "interest_only" && (
+        <div className="mb-6 p-4 rounded-md border border-blue-200 bg-blue-50/50 dark:border-blue-900/50 dark:bg-blue-950/20" data-testid="interest-only-config">
+          <label htmlFor="interestOnlyMonths" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.interestOnlyMonthsLabel}
+          </label>
+          <input
+            id="interestOnlyMonths"
+            data-testid="input-interest-only-months"
+            type="number"
+            value={interestOnlyMonths}
+            onChange={(e) => {
+              setInterestOnlyMonths(e.target.value);
+              setTouched((prev) => ({ ...prev, interestOnlyMonths: true }));
+            }}
+            onBlur={() => setTouched((prev) => ({ ...prev, interestOnlyMonths: true }))}
+            className={`mt-1 w-full sm:w-1/2 rounded-md border bg-gray-50 p-3 text-base transition-colors dark:bg-gray-700 ${
+              touched.interestOnlyMonths && errors.interestOnlyMonths
+                ? "border-red-500 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-500 dark:text-red-100"
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600"
+            }`}
+            placeholder="24"
+            aria-invalid={touched.interestOnlyMonths && !!errors.interestOnlyMonths}
+          />
+          {touched.interestOnlyMonths && errors.interestOnlyMonths && (
+            <p className="mt-1 text-xs text-red-500 font-medium" role="alert" data-testid="error-interest-only-months">
+              {errors.interestOnlyMonths}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Variable Rate Schedule */}
+      {rateType === "variable" && (
+        <div className="mb-6 p-4 rounded-md border border-purple-200 bg-purple-50/50 dark:border-purple-900/50 dark:bg-purple-950/20" data-testid="variable-rate-config">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-md font-semibold text-gray-800 dark:text-gray-200">{t.variableRateTitle}</h3>
+            {rateAdjustments.length < 5 && (
+              <button
+                type="button"
+                onClick={addRateAdjustment}
+                data-testid="add-rate-adjustment-button"
+                className="rounded-md bg-purple-600 px-3 py-1.5 text-xs text-white hover:bg-purple-700"
+              >
+                {t.addRateAdjustmentButton}
+              </button>
+            )}
+          </div>
+          {rateAdjustments.length === 0 ? (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              No adjustments added yet. Click &quot;{t.addRateAdjustmentButton}&quot; to define rate changes.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {rateAdjustments.map((adj, index) => {
+                const adjErr = errors.rateAdjustments?.[index];
+                return (
+                  <div key={index} className="flex flex-wrap items-end gap-3" data-testid={`rate-adjustment-row-${index}`}>
+                    <div className="flex-1 min-w-[130px]">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        {t.startMonthLabel}
+                      </label>
+                      <input
+                        type="number"
+                        data-testid={`adj-start-month-${index}`}
+                        value={adj.startMonth}
+                        onChange={(e) => updateRateAdjustment(index, "startMonth", e.target.value)}
+                        placeholder="13"
+                        className={`mt-1 w-full rounded-md border bg-gray-50 p-2 text-sm dark:bg-gray-700 ${
+                          adjErr?.startMonth ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                        }`}
+                      />
+                      {adjErr?.startMonth && (
+                        <p className="mt-0.5 text-xs text-red-500" data-testid={`adj-error-start-month-${index}`}>
+                          {adjErr.startMonth}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-[130px]">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        {t.adjustedRateLabel}
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        data-testid={`adj-rate-${index}`}
+                        value={adj.rate}
+                        onChange={(e) => updateRateAdjustment(index, "rate", e.target.value)}
+                        placeholder="4.5"
+                        className={`mt-1 w-full rounded-md border bg-gray-50 p-2 text-sm dark:bg-gray-700 ${
+                          adjErr?.rate ? "border-red-500" : "border-gray-300 dark:border-gray-600"
+                        }`}
+                      />
+                      {adjErr?.rate && (
+                        <p className="mt-0.5 text-xs text-red-500" data-testid={`adj-error-rate-${index}`}>
+                          {adjErr.rate}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeRateAdjustment(index)}
+                      data-testid={`remove-rate-adj-${index}`}
+                      className="rounded-md bg-red-500 px-3 py-2 text-xs text-white hover:bg-red-600"
+                    >
+                      {t.removeRateAdjustmentButton}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Optional Amortization Table Rows */}
         <div className="mb-6">
