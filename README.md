@@ -65,7 +65,7 @@ mortgage-amortization-calculator/
 │   ├── chart.spec.ts           # Chart.js visualization & view tab tests
 │   ├── i18n.spec.ts            # 7-language localization & persistence tests
 │   └── theme.spec.ts           # Dark / Light mode & persistence tests
-├── public/                     # Static assets (e.g., icon_calculator.png, icon_calculator.svg)
+├── public/                     # Static assets (icons, manifest, service worker)
 ├── src/
 │   ├── app/                    # Next.js app router
 │   │   ├── globals.css         # Global styles with Tailwind CSS

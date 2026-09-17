@@ -1,9 +1,10 @@
 // src/app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Image from "next/image";
 import "./globals.css";
 import Footer from "./Footer";
+import ServiceWorkerRegistrar from "../components/ServiceWorkerRegistrar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,17 +21,36 @@ export const metadata: Metadata = {
   title: "Loan Amortization Calculator",
   description: "Calculate and rebuild your loan amortization schedule with ease.",
   keywords: "mortgage calculator, loan amortization, amortization schedule, mortgage repayment, financial planning",
+  applicationName: "Loan Amortization Calculator",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Loan Amortization Calculator",
+  },
+  // Explicit Apple tags that recent Next.js versions no longer emit for `appleWebApp`.
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+  },
   openGraph: {
     title: "Loan Amortization Calculator",
     description: "Easily calculate and visualize your mortgage amortization schedule based on loan details or sample data.",
     type: "website",
     url: "https://loan-amortization-calculator.louisvolant.com",
-    images: ["/icon_calculator.png"],
+    images: ["/icon-512.png"],
   },
   icons: [
-    { rel: "icon", url: "/icon_calculator.png" },
-    { rel: "apple-touch-icon", url: "/icon_calculator.png" },
+    { rel: "icon", url: "/logo.svg", type: "image/svg+xml" },
+    { rel: "icon", url: "/favicon.png", sizes: "48x48", type: "image/png" },
+    { rel: "icon", url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    { rel: "icon", url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    { rel: "apple-touch-icon", url: "/apple-touch-icon.png", sizes: "180x180" },
+    { rel: "mask-icon", url: "/mask-icon.svg", color: "#2563eb" },
   ],
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({
@@ -46,8 +66,8 @@ export default function RootLayout({
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center p-1.5 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-sm">
                 <Image
-                  src="/icon_calculator.png"
-                  alt="Mortgage Calculator Logo"
+                  src="/logo-64.png"
+                  alt="Loan Amortization Calculator logo"
                   width={28}
                   height={28}
                   priority
@@ -67,6 +87,7 @@ export default function RootLayout({
         </header>
         <main className="flex-1">{children}</main>
         <Footer />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );
