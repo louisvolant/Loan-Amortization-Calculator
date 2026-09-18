@@ -22,6 +22,7 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
 - **Playwright E2E Test Suite**: Full end-to-end test coverage covering calculations, real-time validations, loan types (amortizing, interest-only, ARM), pagination, Chart.js interactions, 7-language localization, and theme toggling.
 - **Optional Table Row Input**: Rebuild schedules by entering up to three rows from an existing amortization table.
 - **Persistent State**: Form inputs, loan configurations, and calculated schedules are saved to local storage, restoring the last state on page reload.
+- **Footer Navigation & Portfolio Links**: Direct navigation to companion tools and web applications (including Whois at `whois.louisvolant.com`, Currency Converter at `currency-converter.louisvolant.com`, and Password Keeper) aligned with the official portfolio.
 - **Responsive Design**: Mobile-friendly interface optimized for phones, tablets, and desktop displays.
 - **Extensible**: Built with modern Next.js and React, ready for additional features like CSV export or chart visualization.
 
@@ -58,7 +59,7 @@ A modern, user-friendly web application built with **React.js**, **Next.js**, an
 
 mortgage-amortization-calculator/
 ├── e2e/                        # Playwright end-to-end test suite
-│   ├── smoke.spec.ts           # Smoke & basic calculation tests
+│   ├── smoke.spec.ts           # Smoke & footer navigation links tests
 │   ├── validation.spec.ts      # Real-time field validation tests
 │   ├── loan-types.spec.ts      # Interest-only & ARM adjustable rate tests
 │   ├── pagination.spec.ts      # Schedule pagination tests
