@@ -19,6 +19,14 @@ export default function ServiceWorkerRegistrar() {
       return;
     }
 
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+
     const register = async () => {
       try {
         const registration = await navigator.serviceWorker.register("/sw.js");
