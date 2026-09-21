@@ -5,14 +5,14 @@ test("smoke test loads the home page", async ({ page }) => {
   await expect(page).toHaveTitle(/Loan Amortization Calculator/i);
 });
 
-test("renders external footer links with updated portfolio URLs for Whois and Currency Converter", async ({ page }) => {
+test("renders compact footer with Personal Page and Portfolio links", async ({ page }) => {
   await page.goto("/");
-  const whoisLink = page.locator('footer a:has-text("Whois")');
-  await expect(whoisLink).toBeVisible();
-  await expect(whoisLink).toHaveAttribute("href", "https://whois.louisvolant.com");
+  const personalLink = page.locator('footer a:has-text("Personal Page")');
+  await expect(personalLink).toBeVisible();
+  await expect(personalLink).toHaveAttribute("href", "https://www.louisvolant.com");
 
-  const currencyLink = page.locator('footer a:has-text("Currency Converter")');
-  await expect(currencyLink).toBeVisible();
-  await expect(currencyLink).toHaveAttribute("href", "https://currency-converter.louisvolant.com");
+  const portfolioLink = page.locator('footer a:has-text("Portfolio")');
+  await expect(portfolioLink).toBeVisible();
+  await expect(portfolioLink).toHaveAttribute("href", "https://www.louisvolant.com/portfolio");
 });
 
